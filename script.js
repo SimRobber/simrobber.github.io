@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentPage = 1;
     const resultsPerPage = 10;
 
+    // Check if CORS proxy access is needed
+    checkCorsProxyAccess();
+
     // Handle quick search buttons
     quickSearchButtons.forEach(button => {
         button.addEventListener('click', async () => {
@@ -48,6 +51,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    async function checkCorsProxyAccess() {
+        try {
+            const response = await fetch('https://cors-anywhere.herokuapp.com/corsdemo');
+            const text = await response.text();
+            if (text.includes('Request temporary access to the demo server')) {
+                displayError('Please visit <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">this link</a> and click the button to request temporary access to the demo server. Then try your search again.');
+            }
+        } catch (error) {
+            console.error('CORS proxy check error:', error);
+        }
+    }
+
     async function performSearch(query) {
         // Clear previous results
         resultsList.innerHTML = '';
@@ -70,6 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
             const targetUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
             
+            console.log('Searching for:', query);
+            
             const response = await fetch(proxyUrl + targetUrl, {
                 headers: {
                     'Accept': 'text/html',
@@ -78,30 +95,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             
+            if (response.status === 403) {
+                displayError('Access to the search service is currently restricted. Please visit <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">this link</a> and click the button to request temporary access to the demo server. Then try your search again.');
+                return;
+            }
+            
             const html = await response.text();
+            console.log('Received HTML response');
+            
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             
-            // Extract results from the HTML
-            const resultElements = doc.querySelectorAll('.result');
+            // Try different selectors for DuckDuckGo results
+            const resultElements = doc.querySelectorAll('.result, .web-result, .result__body, .zci-result');
+            
+            console.log('Found result elements:', resultElements.length);
             
             resultElements.forEach(element => {
-                const titleElement = element.querySelector('.result__title');
-                const snippetElement = element.querySelector('.result__snippet');
-                const linkElement = element.querySelector('.result__url');
+                // Try different selectors for title, snippet, and link
+                const titleElement = element.querySelector('.result__title, .result__a, .web-result__title, .zci__title');
+                const snippetElement = element.querySelector('.result__snippet, .result__a, .web-result__description, .zci__description');
+                const linkElement = element.querySelector('.result__url, .result__a, .web-result__url, .zci__url');
                 
                 if (titleElement && snippetElement && linkElement) {
-                    currentResults.push({
-                        title: titleElement.textContent.trim(),
-                        snippet: snippetElement.textContent.trim(),
-                        link: linkElement.href
-                    });
+                    const title = titleElement.textContent.trim();
+                    const snippet = snippetElement.textContent.trim();
+                    const link = linkElement.href || linkElement.getAttribute('href');
+                    
+                    if (title && snippet && link) {
+                        currentResults.push({
+                            title: title,
+                            snippet: snippet,
+                            link: link
+                        });
+                    }
                 }
             });
             
+            console.log('Processed results:', currentResults.length);
+            
             if (currentResults.length === 0) {
-                displayError('No results found. Please try a different search term.');
-                updatePaginationControls();
+                // If no results found, try alternative search
+                await searchAlternative(query);
                 return;
             }
 
@@ -112,7 +147,56 @@ document.addEventListener('DOMContentLoaded', () => {
             displayCurrentPage();
         } catch (error) {
             console.error('DuckDuckGo search error:', error);
-            displayError('Search failed. Please try again later.');
+            if (error.message.includes('corsdemo')) {
+                displayError('Please visit <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">this link</a> and click the button to request temporary access to the demo server. Then try your search again.');
+            } else {
+                displayError('Search failed. Please try again later.');
+            }
+        }
+    }
+
+    async function searchAlternative(query) {
+        try {
+            // Try alternative search method using DuckDuckGo's API
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+            const targetUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
+            
+            const response = await fetch(proxyUrl + targetUrl, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (response.status === 403) {
+                return; // Already handled in the main search function
+            }
+            
+            const data = await response.json();
+            
+            if (data.RelatedTopics && data.RelatedTopics.length > 0) {
+                data.RelatedTopics.forEach(topic => {
+                    if (topic.Text && topic.FirstURL) {
+                        currentResults.push({
+                            title: topic.Text.split('.')[0],
+                            snippet: topic.Text,
+                            link: topic.FirstURL
+                        });
+                    }
+                });
+                
+                if (currentResults.length > 0) {
+                    updatePaginationControls();
+                    displayCurrentPage();
+                    return;
+                }
+            }
+            
+            displayError('No results found. Please try a different search term.');
+            updatePaginationControls();
+        } catch (error) {
+            console.error('Alternative search error:', error);
+            // Don't display error here as it's already handled in the main search function
         }
     }
 
@@ -155,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayError(message) {
         const errorItem = document.createElement('div');
         errorItem.className = 'result-item error';
-        errorItem.textContent = message;
+        errorItem.innerHTML = message;
         resultsList.appendChild(errorItem);
     }
 }); 
