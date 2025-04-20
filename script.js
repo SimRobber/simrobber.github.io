@@ -60,17 +60,21 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add UK and year filter to the query
         const fullQuery = `${query} ${currentYear} site:.uk`;
         
-        // Search using DuckDuckGo
+        // Search using DuckDuckGo with CORS proxy
         await searchDuckDuckGo(fullQuery);
     }
 
     async function searchDuckDuckGo(query) {
         try {
-            // DuckDuckGo's HTML endpoint
-            const response = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
+            // Use a CORS proxy to access DuckDuckGo
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+            const targetUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+            
+            const response = await fetch(proxyUrl + targetUrl, {
                 headers: {
                     'Accept': 'text/html',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             });
             
