@@ -1,12 +1,14 @@
 // UI management and interactions
 class UIManager {
     constructor() {
-        this.currentTab = 'orders';
+        this.currentTab = 'contacts';
         this.currentRefund = null;
         this.currentWarrantyClaim = null;
+        this.currentContact = null;
         this.orders = [];
         this.refunds = [];
         this.warrantyClaims = [];
+        this.contacts = [];
         this.retailers = [];
     }
 
@@ -36,9 +38,9 @@ class UIManager {
             });
         });
 
-        // Add order button
-        document.getElementById('add-order-btn').addEventListener('click', () => {
-            this.showModal('add-order-modal');
+        // Add contact button
+        document.getElementById('add-contact-btn').addEventListener('click', () => {
+            this.showModal('add-contact-modal');
         });
 
         // Add refund button
@@ -70,10 +72,10 @@ class UIManager {
             }
         });
 
-        // Add order form
-        document.getElementById('add-order-form').addEventListener('submit', (e) => {
+        // Add contact form
+        document.getElementById('add-contact-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            this.handleAddOrder();
+            this.handleAddContact();
         });
 
         // Add refund form
@@ -147,6 +149,7 @@ class UIManager {
             this.orders = await db.getOrders();
             this.refunds = await db.getRefunds();
             this.warrantyClaims = await db.getWarrantyClaims();
+            this.contacts = await db.getContacts();
             this.retailers = await db.getRetailers();
             
             // Load sample retailers if none exist
@@ -176,7 +179,7 @@ class UIManager {
     }
 
     async render() {
-        await this.renderOrders();
+        await this.renderContacts();
         await this.renderRefunds();
         await this.renderWarrantyClaims();
         await this.renderAnalytics();
@@ -235,36 +238,35 @@ class UIManager {
         document.getElementById('photo-preview').innerHTML = '';
     }
 
-    async renderOrders() {
-        const ordersList = document.getElementById('orders-list');
-        const emptyOrders = document.getElementById('empty-orders');
+    async renderContacts() {
+        const contactsList = document.getElementById('contacts-list');
+        const emptyContacts = document.getElementById('empty-contacts');
         
-        if (this.orders.length === 0) {
-            ordersList.style.display = 'none';
-            emptyOrders.style.display = 'block';
+        if (this.contacts.length === 0) {
+            contactsList.style.display = 'none';
+            emptyContacts.style.display = 'block';
             return;
         }
         
-        ordersList.style.display = 'block';
-        emptyOrders.style.display = 'none';
+        contactsList.style.display = 'block';
+        emptyContacts.style.display = 'none';
         
-        ordersList.innerHTML = this.orders.map(order => this.createOrderCard(order)).join('');
+        contactsList.innerHTML = this.contacts.map(contact => this.createContactCard(contact)).join('');
     }
 
-    createOrderCard(order) {
-        const totalAmount = order.purchasePrice + (order.shippingCost || 0);
-        
+    createContactCard(contact) {
         return `
-            <div class="order-card" onclick="ui.showOrderDetail('${order.id}')">
-                <div class="order-header">
-                    <div class="order-retailer">${order.retailerName}</div>
-                    <div class="order-price">£${totalAmount.toFixed(2)}</div>
+            <div class="contact-card" onclick="ui.showContactDetail('${contact.id}')">
+                <div class="contact-header">
+                    <div class="contact-name">${contact.name}</div>
+                    <div class="contact-platform">${contact.socialPlatform}</div>
                 </div>
-                <div class="order-description">${order.itemDescription}</div>
-                <div class="order-meta">
-                    <div>Order #${order.orderNumber}</div>
-                    <div>${this.formatDate(order.purchaseDate)}</div>
+                <div class="contact-info">${contact.usernameEmailPhone}</div>
+                <div class="contact-meta">
+                    <div>${contact.role || 'No role specified'}</div>
+                    <div>${this.formatDate(contact.createdAt)}</div>
                 </div>
+                ${contact.notes ? `<div class="contact-notes">${contact.notes}</div>` : ''}
             </div>
         `;
     }
@@ -468,6 +470,27 @@ class UIManager {
         }
     }
 
+    async handleAddContact() {
+        const contactData = {
+            name: document.getElementById('contact-name').value,
+            socialPlatform: document.getElementById('social-platform').value,
+            usernameEmailPhone: document.getElementById('username-email-phone').value,
+            role: document.getElementById('contact-role').value,
+            notes: document.getElementById('contact-notes').value
+        };
+        
+        try {
+            const newContact = await db.addContact(contactData);
+            this.contacts.unshift(newContact);
+            await this.renderContacts();
+            this.hideModal();
+            this.showNotification('Contact added successfully!');
+        } catch (error) {
+            console.error('Error adding contact:', error);
+            this.showNotification('Error adding contact. Please try again.', 'error');
+        }
+    }
+
     async handleAddRefund() {
         const refundData = {
             retailerName: document.getElementById('refund-retailer').value,
@@ -510,6 +533,17 @@ class UIManager {
             console.error('Error adding warranty claim:', error);
             this.showNotification('Error adding warranty claim. Please try again.', 'error');
         }
+    }
+
+    async showContactDetail(contactId) {
+        const contact = this.contacts.find(c => c.id === contactId);
+        if (!contact) return;
+        
+        this.currentContact = contact;
+        
+        // For now, just show a simple alert with contact details
+        // You can expand this to show a proper modal later
+        alert(`Contact Details:\n\nName: ${contact.name}\nPlatform: ${contact.socialPlatform}\nContact: ${contact.usernameEmailPhone}\nRole: ${contact.role || 'Not specified'}\nNotes: ${contact.notes || 'None'}`);
     }
 
     async showRefundDetail(refundId) {

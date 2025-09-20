@@ -42,6 +42,15 @@ class Database {
                     warrantyStore.createIndex('createdAt', 'createdAt', { unique: false });
                 }
                 
+                // Contacts store
+                if (!db.objectStoreNames.contains('contacts')) {
+                    const contactsStore = db.createObjectStore('contacts', { keyPath: 'id' });
+                    contactsStore.createIndex('name', 'name', { unique: false });
+                    contactsStore.createIndex('socialPlatform', 'socialPlatform', { unique: false });
+                    contactsStore.createIndex('role', 'role', { unique: false });
+                    contactsStore.createIndex('createdAt', 'createdAt', { unique: false });
+                }
+                
                 // Communications store
                 if (!db.objectStoreNames.contains('communications')) {
                     const commsStore = db.createObjectStore('communications', { keyPath: 'id' });
@@ -344,6 +353,84 @@ class Database {
         });
     }
 
+    // Contacts
+    async addContact(contactData) {
+        const transaction = this.db.transaction(['contacts'], 'readwrite');
+        const store = transaction.objectStore('contacts');
+        
+        const contact = {
+            id: this.generateId(),
+            ...contactData,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        
+        return new Promise((resolve, reject) => {
+            const request = store.add(contact);
+            request.onsuccess = () => resolve(contact);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async getContacts() {
+        const transaction = this.db.transaction(['contacts'], 'readonly');
+        const store = transaction.objectStore('contacts');
+        const index = store.index('createdAt');
+        
+        return new Promise((resolve, reject) => {
+            const request = index.openCursor(null, 'prev');
+            const contacts = [];
+            
+            request.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    contacts.push(cursor.value);
+                    cursor.continue();
+                } else {
+                    resolve(contacts);
+                }
+            };
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async updateContact(id, contactData) {
+        const transaction = this.db.transaction(['contacts'], 'readwrite');
+        const store = transaction.objectStore('contacts');
+        
+        return new Promise((resolve, reject) => {
+            const getRequest = store.get(id);
+            getRequest.onsuccess = () => {
+                const contact = getRequest.result;
+                if (contact) {
+                    const updatedContact = {
+                        ...contact,
+                        ...contactData,
+                        updatedAt: new Date().toISOString()
+                    };
+                    
+                    const putRequest = store.put(updatedContact);
+                    putRequest.onsuccess = () => resolve(updatedContact);
+                    putRequest.onerror = () => reject(putRequest.error);
+                } else {
+                    reject(new Error('Contact not found'));
+                }
+            };
+            getRequest.onerror = () => reject(getRequest.error);
+        });
+    }
+
+    async deleteContact(id) {
+        const transaction = this.db.transaction(['contacts'], 'readwrite');
+        const store = transaction.objectStore('contacts');
+        
+        return new Promise((resolve, reject) => {
+            const request = store.delete(id);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
     // Communications
     async addCommunication(commData) {
         const transaction = this.db.transaction(['communications'], 'readwrite');
@@ -459,7 +546,7 @@ class Database {
     }
 
     async clearAllData() {
-        const stores = ['orders', 'refunds', 'warrantyClaims', 'communications', 'documents', 'retailers'];
+        const stores = ['orders', 'refunds', 'warrantyClaims', 'contacts', 'communications', 'documents', 'retailers'];
         const transaction = this.db.transaction(stores, 'readwrite');
         
         const promises = stores.map(storeName => {
@@ -475,10 +562,11 @@ class Database {
     }
 
     async exportData() {
-        const [orders, refunds, warrantyClaims, communications, documents, retailers] = await Promise.all([
+        const [orders, refunds, warrantyClaims, contacts, communications, documents, retailers] = await Promise.all([
             this.getOrders(),
             this.getRefunds(),
             this.getWarrantyClaims(),
+            this.getContacts(),
             this.getAllCommunications(),
             this.getAllDocuments(),
             this.getRetailers()
@@ -488,6 +576,7 @@ class Database {
             orders,
             refunds,
             warrantyClaims,
+            contacts,
             communications,
             documents,
             retailers,

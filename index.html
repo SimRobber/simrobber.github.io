@@ -48,16 +48,12 @@
 
         <!-- Tab Navigation -->
         <nav class="tab-navigation">
-            <button class="tab-btn active" data-tab="orders">
+            <button class="tab-btn active" data-tab="contacts">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="8" y1="6" x2="21" y2="6"></line>
-                    <line x1="8" y1="12" x2="21" y2="12"></line>
-                    <line x1="8" y1="18" x2="21" y2="18"></line>
-                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-                <span>Orders</span>
+                <span>Contacts</span>
             </button>
             <button class="tab-btn" data-tab="refunds">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -86,11 +82,11 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Orders Tab -->
-            <div id="orders-tab" class="tab-content active">
+            <!-- Contacts Tab -->
+            <div id="contacts-tab" class="tab-content active">
                 <div class="tab-header">
-                    <h2>Orders</h2>
-                    <button id="add-order-btn" class="add-btn">
+                    <h2>Contacts</h2>
+                    <button id="add-contact-btn" class="add-btn">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -99,23 +95,22 @@
                 </div>
                 
                 <div class="search-container">
-                    <input type="text" id="orders-search" placeholder="Search orders..." class="search-input">
+                    <input type="text" id="contact-search" placeholder="Search contacts..." class="search-input">
                 </div>
                 
-                <div id="orders-list" class="orders-list">
-                    <!-- Orders will be populated here -->
+                <div id="contacts-list" class="contacts-list">
+                    <!-- Contacts will be populated here -->
                 </div>
                 
-                <div id="empty-orders" class="empty-state" style="display: none;">
+                <div id="empty-contacts" class="empty-state" style="display: none;">
                     <div class="empty-icon">
                         <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                            <polyline points="3.27,6.96 12,12.01 20.73,6.96"></polyline>
-                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
                         </svg>
                     </div>
-                    <h3>No Orders Yet</h3>
-                    <p>Add your first order to start tracking refunds and warranty claims</p>
+                    <h3>No Contacts Yet</h3>
+                    <p>Add your first contact to start building your network</p>
                 </div>
             </div>
 
@@ -227,55 +222,36 @@
     <!-- Modals -->
     <div id="modal-overlay" class="modal-overlay" style="display: none;">
         <!-- Add Order Modal -->
-        <div id="add-order-modal" class="modal" style="display: none;">
+        <div id="add-contact-modal" class="modal" style="display: none;">
             <div class="modal-header">
-                <h3>Add Order</h3>
+                <h3>Add Contact</h3>
                 <button class="modal-close">&times;</button>
             </div>
             <div class="modal-content">
-                <form id="add-order-form">
+                <form id="add-contact-form">
                     <div class="form-group">
-                        <label for="retailer-name">Retailer Name *</label>
-                        <input type="text" id="retailer-name" required>
+                        <label for="contact-name">Name *</label>
+                        <input type="text" id="contact-name" required>
                     </div>
                     <div class="form-group">
-                        <label for="order-number">Order Number *</label>
-                        <input type="text" id="order-number" required>
+                        <label for="social-platform">Social Platform *</label>
+                        <input type="text" id="social-platform" placeholder="e.g. Instagram, Twitter, LinkedIn, etc." required>
                     </div>
                     <div class="form-group">
-                        <label for="purchase-date">Purchase Date *</label>
-                        <input type="date" id="purchase-date" required>
+                        <label for="username-email-phone">Username/Email/Phone *</label>
+                        <input type="text" id="username-email-phone" placeholder="e.g. @username, email@example.com, +1234567890" required>
                     </div>
                     <div class="form-group">
-                        <label for="item-description">Item Description *</label>
-                        <textarea id="item-description" rows="3" required></textarea>
-                    </div>
-                    <div class="form-row">
-                    <div class="form-group">
-                        <label for="purchase-price">Purchase Price (£)</label>
-                        <input type="number" id="purchase-price" step="0.01" min="0">
+                        <label for="contact-role">Role</label>
+                        <input type="text" id="contact-role" placeholder="e.g. Customer Service, Manager, Friend, etc.">
                     </div>
                     <div class="form-group">
-                        <label for="shipping-cost">Shipping Cost (£)</label>
-                        <input type="number" id="shipping-cost" step="0.01" min="0">
-                    </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="warranty-period">Warranty Period (days)</label>
-                        <input type="number" id="warranty-period" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label for="reason-for-claim">Reason for Claim</label>
-                        <textarea id="reason-for-claim" rows="2"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="order-photos">Photos</label>
-                        <input type="file" id="order-photos" multiple accept="image/*">
-                        <div id="photo-preview" class="photo-preview"></div>
+                        <label for="contact-notes">Notes</label>
+                        <textarea id="contact-notes" rows="3" placeholder="Additional information about this contact..."></textarea>
                     </div>
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary modal-close">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Order</button>
+                        <button type="submit" class="btn btn-primary">Save Contact</button>
                     </div>
                 </form>
             </div>
