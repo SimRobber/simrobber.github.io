@@ -7,8 +7,8 @@
 
 body {
     font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #f2f2f7;
-    color: #1d1d1f;
+    background-color: #000000;
+    color: #ffffff;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -49,14 +49,14 @@ body {
 .app-container {
     max-width: 480px;
     margin: 0 auto;
-    background: white;
+    background: #000000;
     min-height: 100vh;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
 }
 
 /* Header */
 .app-header {
-    background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+    background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
     color: white;
     padding: 20px;
     display: flex;
@@ -65,6 +65,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
+    border-bottom: 1px solid #333333;
 }
 
 .app-title {
@@ -90,8 +91,8 @@ body {
 /* Tab Navigation */
 .tab-navigation {
     display: flex;
-    background: white;
-    border-bottom: 1px solid #e5e5ea;
+    background: #1a1a1a;
+    border-bottom: 1px solid #333333;
     position: sticky;
     top: 80px;
     z-index: 99;
@@ -113,7 +114,7 @@ body {
 }
 
 .tab-btn.active {
-    color: #007AFF;
+    color: #ffffff;
 }
 
 .tab-btn svg {
@@ -121,7 +122,7 @@ body {
 }
 
 .tab-btn:hover {
-    background-color: #f2f2f7;
+    background-color: #333333;
 }
 
 /* Main Content */
@@ -148,7 +149,7 @@ body {
 .tab-header h2 {
     font-size: 28px;
     font-weight: 700;
-    color: #1d1d1f;
+    color: #ffffff !important;
 }
 
 .add-btn {
@@ -177,17 +178,18 @@ body {
 .search-input {
     width: 100%;
     padding: 12px 16px;
-    border: 1px solid #e5e5ea;
+    border: 1px solid #333333;
     border-radius: 12px;
     font-size: 16px;
-    background: #f2f2f7;
+    background: #1a1a1a;
+    color: #ffffff;
     transition: all 0.2s;
 }
 
 .search-input:focus {
     outline: none;
     border-color: #007AFF;
-    background: white;
+    background: #333333;
     box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
 }
 
@@ -198,9 +200,10 @@ body {
 
 .filter-select {
     padding: 8px 12px;
-    border: 1px solid #e5e5ea;
+    border: 1px solid #333333;
     border-radius: 8px;
-    background: white;
+    background: #1a1a1a;
+    color: #ffffff;
     font-size: 14px;
     cursor: pointer;
 }
@@ -213,18 +216,19 @@ body {
 }
 
 .order-card, .refund-card, .warranty-card {
-    background: white;
+    background: #1a1a1a;
     border-radius: 16px;
     padding: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e5e5ea;
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+    border: 1px solid #333333;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .order-card:hover, .refund-card:hover, .warranty-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.15);
+    background: #222222;
 }
 
 .order-header {
@@ -237,7 +241,7 @@ body {
 .order-retailer {
     font-size: 18px;
     font-weight: 600;
-    color: #1d1d1f;
+    color: #ffffff;
 }
 
 .order-price {
@@ -248,7 +252,7 @@ body {
 
 .order-description {
     font-size: 14px;
-    color: #8e8e93;
+    color: #cccccc;
     margin-bottom: 8px;
     line-height: 1.4;
 }
@@ -258,7 +262,7 @@ body {
     justify-content: space-between;
     align-items: center;
     font-size: 12px;
-    color: #8e8e93;
+    color: #cccccc;
 }
 
 .order-claims {
@@ -301,7 +305,7 @@ body {
 .empty-state {
     text-align: center;
     padding: 60px 20px;
-    color: #8e8e93;
+    color: #cccccc;
 }
 
 .empty-icon {
@@ -313,7 +317,7 @@ body {
     font-size: 20px;
     font-weight: 600;
     margin-bottom: 8px;
-    color: #1d1d1f;
+    color: #ffffff;
 }
 
 .empty-state p {
@@ -337,13 +341,14 @@ body {
 }
 
 .modal {
-    background: white;
+    background: #1a1a1a;
     border-radius: 16px;
     width: 100%;
     max-width: 500px;
     max-height: 90vh;
     overflow: hidden;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    border: 1px solid #333333;
 }
 
 .modal-large {
@@ -355,20 +360,21 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    border-bottom: 1px solid #e5e5ea;
+    border-bottom: 1px solid #333333;
 }
 
 .modal-header h3 {
     font-size: 20px;
     font-weight: 600;
     margin: 0;
+    color: #ffffff;
 }
 
 .modal-close {
     background: none;
     border: none;
     font-size: 24px;
-    color: #8e8e93;
+    color: #cccccc;
     cursor: pointer;
     padding: 4px;
     border-radius: 4px;
@@ -376,8 +382,8 @@ body {
 }
 
 .modal-close:hover {
-    background: #f2f2f7;
-    color: #1d1d1f;
+    background: #333333;
+    color: #ffffff;
 }
 
 .modal-content {
@@ -401,7 +407,7 @@ body {
     display: block;
     font-size: 14px;
     font-weight: 600;
-    color: #1d1d1f;
+    color: #ffffff;
     margin-bottom: 8px;
 }
 
@@ -410,10 +416,11 @@ body {
 .form-group select {
     width: 100%;
     padding: 12px 16px;
-    border: 1px solid #e5e5ea;
+    border: 1px solid #333333;
     border-radius: 12px;
     font-size: 16px;
-    background: #f2f2f7;
+    background: #1a1a1a;
+    color: #ffffff;
     transition: all 0.2s;
 }
 
@@ -422,7 +429,7 @@ body {
 .form-group select:focus {
     outline: none;
     border-color: #007AFF;
-    background: white;
+    background: #333333;
     box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
 }
 
@@ -521,12 +528,12 @@ body {
 }
 
 .summary-card {
-    background: white;
+    background: #1a1a1a;
     border-radius: 16px;
     padding: 20px;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e5e5ea;
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+    border: 1px solid #333333;
 }
 
 .summary-card-icon {
@@ -543,29 +550,29 @@ body {
 .summary-card-value {
     font-size: 24px;
     font-weight: 700;
-    color: #1d1d1f;
+    color: #ffffff;
     margin-bottom: 4px;
 }
 
 .summary-card-label {
     font-size: 14px;
-    color: #8e8e93;
+    color: #ffffff;
     font-weight: 500;
 }
 
 .chart-container {
-    background: white;
+    background: #1a1a1a;
     border-radius: 16px;
     padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e5e5ea;
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+    border: 1px solid #333333;
 }
 
 .chart-title {
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 20px;
-    color: #1d1d1f;
+    color: #ffffff;
 }
 
 .success-rates {
@@ -579,13 +586,14 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    background: #f8f9fa;
+    background: #1a1a1a;
     border-radius: 8px;
+    border: 1px solid #333333;
 }
 
 .rate-label {
     font-weight: 500;
-    color: #1d1d1f;
+    color: #ffffff;
 }
 
 .rate-value {
@@ -603,7 +611,7 @@ body {
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 16px;
-    color: #1d1d1f;
+    color: #ffffff;
 }
 
 .detail-grid {
@@ -625,14 +633,14 @@ body {
 .detail-item label {
     font-size: 14px;
     font-weight: 600;
-    color: #8e8e93;
+    color: #cccccc;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .detail-item span {
     font-size: 16px;
-    color: #1d1d1f;
+    color: #ffffff;
     word-break: break-word;
 }
 
