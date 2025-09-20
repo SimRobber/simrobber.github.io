@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logger - Refund & Warranty Manager</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Personal refund and warranty claim management app">
+    <meta name="theme-color" content="#007AFF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Logger">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>Loading Logger...</p>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app" class="app-container" style="display: none;">
+        <!-- Header -->
+        <header class="app-header">
+            <h1 class="app-title">Logger</h1>
+            <button id="settings-btn" class="header-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="tab-navigation">
+            <button class="tab-btn active" data-tab="orders">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                <span>Orders</span>
+            </button>
+            <button class="tab-btn" data-tab="refunds">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                <span>Refunds</span>
+            </button>
+            <button class="tab-btn" data-tab="warranty">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span>Warranty</span>
+            </button>
+            <button class="tab-btn" data-tab="analytics">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                <span>Analytics</span>
+            </button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Orders Tab -->
+            <div id="orders-tab" class="tab-content active">
+                <div class="tab-header">
+                    <h2>Orders</h2>
+                    <button id="add-order-btn" class="add-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="search-container">
+                    <input type="text" id="orders-search" placeholder="Search orders..." class="search-input">
+                </div>
+                
+                <div id="orders-list" class="orders-list">
+                    <!-- Orders will be populated here -->
+                </div>
+                
+                <div id="empty-orders" class="empty-state" style="display: none;">
+                    <div class="empty-icon">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            <polyline points="3.27,6.96 12,12.01 20.73,6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                    </div>
+                    <h3>No Orders Yet</h3>
+                    <p>Add your first order to start tracking refunds and warranty claims</p>
+                </div>
+            </div>
+
+            <!-- Refunds Tab -->
+            <div id="refunds-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2>Refunds</h2>
+                    <button id="add-refund-btn" class="add-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="status-filter">
+                    <select id="refund-status-filter" class="filter-select">
+                        <option value="all">All Status</option>
+                        <option value="Planned">Planned</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Complete">Complete</option>
+                    </select>
+                </div>
+                
+                <div class="search-container">
+                    <input type="text" id="refunds-search" placeholder="Search refunds..." class="search-input">
+                </div>
+                
+                <div id="refunds-list" class="refunds-list">
+                    <!-- Refunds will be populated here -->
+                </div>
+                
+                <div id="empty-refunds" class="empty-state" style="display: none;">
+                    <div class="empty-icon">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                    </div>
+                    <h3>No Refunds Yet</h3>
+                    <p>Add your first refund request to start tracking money back</p>
+                </div>
+            </div>
+
+            <!-- Warranty Claims Tab -->
+            <div id="warranty-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2>Warranty Claims</h2>
+                    <button id="add-warranty-btn" class="add-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="status-filter">
+                    <select id="warranty-status-filter" class="filter-select">
+                        <option value="all">All Status</option>
+                        <option value="Planned">Planned</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Complete">Complete</option>
+                    </select>
+                </div>
+                
+                <div class="search-container">
+                    <input type="text" id="warranty-search" placeholder="Search warranty claims..." class="search-input">
+                </div>
+                
+                <div id="warranty-list" class="warranty-list">
+                    <!-- Warranty claims will be populated here -->
+                </div>
+                
+                <div id="empty-warranty" class="empty-state" style="display: none;">
+                    <div class="empty-icon">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                    </div>
+                    <h3>No Warranty Claims Yet</h3>
+                    <p>Add your first warranty claim to start tracking repairs and replacements</p>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analytics-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2>Analytics</h2>
+                    <div class="timeframe-selector">
+                        <select id="timeframe-selector" class="filter-select">
+                            <option value="7">7 Days</option>
+                            <option value="30" selected>30 Days</option>
+                            <option value="90">90 Days</option>
+                            <option value="365">1 Year</option>
+                            <option value="all">All Time</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="analytics-content" class="analytics-content">
+                    <!-- Analytics will be populated here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="modal-overlay" style="display: none;">
+        <!-- Add Order Modal -->
+        <div id="add-order-modal" class="modal" style="display: none;">
+            <div class="modal-header">
+                <h3>Add Order</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-content">
+                <form id="add-order-form">
+                    <div class="form-group">
+                        <label for="retailer-name">Retailer Name *</label>
+                        <input type="text" id="retailer-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="order-number">Order Number *</label>
+                        <input type="text" id="order-number" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="purchase-date">Purchase Date *</label>
+                        <input type="date" id="purchase-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="item-description">Item Description *</label>
+                        <textarea id="item-description" rows="3" required></textarea>
+                    </div>
+                    <div class="form-row">
+                    <div class="form-group">
+                        <label for="purchase-price">Purchase Price (£)</label>
+                        <input type="number" id="purchase-price" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="shipping-cost">Shipping Cost (£)</label>
+                        <input type="number" id="shipping-cost" step="0.01" min="0">
+                    </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="warranty-period">Warranty Period (days)</label>
+                        <input type="number" id="warranty-period" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="reason-for-claim">Reason for Claim</label>
+                        <textarea id="reason-for-claim" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="order-photos">Photos</label>
+                        <input type="file" id="order-photos" multiple accept="image/*">
+                        <div id="photo-preview" class="photo-preview"></div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Order Detail Modal -->
+        <div id="order-detail-modal" class="modal modal-large" style="display: none;">
+            <div class="modal-header">
+                <h3 id="order-detail-title">Order Details</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div id="order-detail-content">
+                    <!-- Order details will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Refund Modal -->
+        <div id="add-refund-modal" class="modal" style="display: none;">
+            <div class="modal-header">
+                <h3>Add Refund</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-content">
+                <form id="add-refund-form">
+                    <div class="form-group">
+                        <label for="refund-retailer">Retailer Name *</label>
+                        <input type="text" id="refund-retailer" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="refund-amount">Order Amount (£) *</label>
+                        <input type="number" id="refund-amount" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="refund-method">Method for Store *</label>
+                        <input type="text" id="refund-method" placeholder="e.g ftid, eb etc" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="refund-stage">Current Stage *</label>
+                        <select id="refund-stage" required>
+                            <option value="Planned">Planned</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Complete">Complete</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="refund-notes">Notes</label>
+                        <textarea id="refund-notes" rows="3" placeholder="Add any additional details about this refund..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Refund</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add Warranty Claim Modal -->
+        <div id="add-warranty-modal" class="modal" style="display: none;">
+            <div class="modal-header">
+                <h3>Add Warranty Claim</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-content">
+                <form id="add-warranty-form">
+                    <div class="form-group">
+                        <label for="warranty-retailer">Retailer Name *</label>
+                        <input type="text" id="warranty-retailer" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="warranty-item">Item Info *</label>
+                        <textarea id="warranty-item" rows="3" placeholder="Describe the item, model, serial number, etc." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="warranty-method">Method for Store *</label>
+                        <input type="text" id="warranty-method" placeholder="e.g.,ftid, eb etc" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="warranty-stage">Current Stage *</label>
+                        <select id="warranty-stage" required>
+                            <option value="Planned">Planned</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Complete">Complete</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="warranty-notes">Notes</label>
+                        <textarea id="warranty-notes" rows="3" placeholder="Add any additional details about this warranty claim..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Warranty Claim</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal" style="display: none;">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="settings-section">
+                    <h4>Data Management</h4>
+                    <button id="export-data-btn" class="btn btn-outline">Export Data</button>
+                    <button id="import-data-btn" class="btn btn-outline">Import Data</button>
+                    <button id="clear-data-btn" class="btn btn-danger">Clear All Data</button>
+                </div>
+                <div class="settings-section">
+                    <h4>App Information</h4>
+                    <p>Version: 1.0.0</p>
+                    <p>Build: 1</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/database.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
