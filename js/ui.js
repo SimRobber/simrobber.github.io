@@ -88,6 +88,18 @@ class UIManager {
             this.handleAddWarrantyClaim();
         });
 
+        // Edit refund form
+        document.getElementById('edit-refund-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleEditRefund();
+        });
+
+        // Edit warranty form
+        document.getElementById('edit-warranty-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleEditWarrantyClaim();
+        });
+
         // Search inputs
         document.getElementById('orders-search').addEventListener('input', (e) => {
             this.filterOrders(e.target.value);
@@ -500,7 +512,57 @@ class UIManager {
         if (!refund) return;
         
         this.currentRefund = refund;
-        this.showNotification('Refund detail view coming soon!');
+        
+        document.getElementById('refund-detail-title').textContent = `${refund.retailerName} - Refund Details`;
+        
+        document.getElementById('refund-detail-content').innerHTML = `
+            <div class="detail-section">
+                <h4>Refund Information</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Retailer</label>
+                        <span>${refund.retailerName}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Amount</label>
+                        <span>£${refund.amount.toFixed(2)}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Method</label>
+                        <span>${refund.method}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Stage</label>
+                        <span class="status-badge status-${this.getStatusClass(refund.status)}">${refund.status}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Created</label>
+                        <span>${this.formatDate(refund.createdAt)}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Last Updated</label>
+                        <span>${this.formatDate(refund.updatedAt)}</span>
+                    </div>
+                    ${refund.notes ? `
+                        <div class="detail-item full-width">
+                            <label>Notes</label>
+                            <span>${refund.notes}</span>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+            
+            <div class="detail-actions">
+                <button class="btn btn-primary" onclick="ui.showEditRefund('${refund.id}')">
+                    Edit Refund
+                </button>
+                <button class="btn btn-danger" onclick="ui.deleteRefund('${refund.id}')">
+                    Delete Refund
+                </button>
+            </div>
+        `;
+        
+        this.showModal('refund-detail-modal');
     }
 
     async showWarrantyDetail(claimId) {
@@ -508,7 +570,57 @@ class UIManager {
         if (!claim) return;
         
         this.currentWarrantyClaim = claim;
-        this.showNotification('Warranty claim detail view coming soon!');
+        
+        document.getElementById('warranty-detail-title').textContent = `${claim.retailerName} - Warranty Claim Details`;
+        
+        document.getElementById('warranty-detail-content').innerHTML = `
+            <div class="detail-section">
+                <h4>Warranty Claim Information</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Retailer</label>
+                        <span>${claim.retailerName}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Item Info</label>
+                        <span>${claim.itemInfo}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Method</label>
+                        <span>${claim.method}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Stage</label>
+                        <span class="status-badge status-${this.getStatusClass(claim.status)}">${claim.status}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Created</label>
+                        <span>${this.formatDate(claim.createdAt)}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Last Updated</label>
+                        <span>${this.formatDate(claim.updatedAt)}</span>
+                    </div>
+                    ${claim.notes ? `
+                        <div class="detail-item full-width">
+                            <label>Notes</label>
+                            <span>${claim.notes}</span>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+            
+            <div class="detail-actions">
+                <button class="btn btn-primary" onclick="ui.showEditWarranty('${claim.id}')">
+                    Edit Warranty Claim
+                </button>
+                <button class="btn btn-danger" onclick="ui.deleteWarrantyClaim('${claim.id}')">
+                    Delete Warranty Claim
+                </button>
+            </div>
+        `;
+        
+        this.showModal('warranty-detail-modal');
     }
 
     async showOrderDetail(orderId) {
@@ -516,6 +628,132 @@ class UIManager {
         if (!order) return;
         
         this.showNotification('Order detail view coming soon!');
+    }
+
+    async showEditRefund(refundId) {
+        const refund = this.refunds.find(r => r.id === refundId);
+        if (!refund) return;
+        
+        // Populate edit form
+        document.getElementById('edit-refund-id').value = refund.id;
+        document.getElementById('edit-refund-retailer').value = refund.retailerName;
+        document.getElementById('edit-refund-amount').value = refund.amount;
+        document.getElementById('edit-refund-method').value = refund.method;
+        document.getElementById('edit-refund-stage').value = refund.status;
+        document.getElementById('edit-refund-notes').value = refund.notes || '';
+        
+        this.hideModal();
+        this.showModal('edit-refund-modal');
+    }
+
+    async showEditWarranty(claimId) {
+        const claim = this.warrantyClaims.find(c => c.id === claimId);
+        if (!claim) return;
+        
+        // Populate edit form
+        document.getElementById('edit-warranty-id').value = claim.id;
+        document.getElementById('edit-warranty-retailer').value = claim.retailerName;
+        document.getElementById('edit-warranty-item').value = claim.itemInfo;
+        document.getElementById('edit-warranty-method').value = claim.method;
+        document.getElementById('edit-warranty-stage').value = claim.status;
+        document.getElementById('edit-warranty-notes').value = claim.notes || '';
+        
+        this.hideModal();
+        this.showModal('edit-warranty-modal');
+    }
+
+    async handleEditRefund() {
+        const refundId = document.getElementById('edit-refund-id').value;
+        const updates = {
+            retailerName: document.getElementById('edit-refund-retailer').value,
+            amount: parseFloat(document.getElementById('edit-refund-amount').value) || 0,
+            method: document.getElementById('edit-refund-method').value,
+            stage: document.getElementById('edit-refund-stage').value,
+            status: document.getElementById('edit-refund-stage').value,
+            notes: document.getElementById('edit-refund-notes').value
+        };
+        
+        try {
+            await db.updateRefund(refundId, updates);
+            
+            // Update local data
+            const refundIndex = this.refunds.findIndex(r => r.id === refundId);
+            if (refundIndex !== -1) {
+                Object.assign(this.refunds[refundIndex], updates, { updatedAt: new Date().toISOString() });
+            }
+            
+            await this.renderRefunds();
+            this.hideModal();
+            this.showNotification('Refund updated successfully!');
+        } catch (error) {
+            console.error('Error updating refund:', error);
+            this.showNotification('Error updating refund. Please try again.', 'error');
+        }
+    }
+
+    async handleEditWarrantyClaim() {
+        const claimId = document.getElementById('edit-warranty-id').value;
+        const updates = {
+            retailerName: document.getElementById('edit-warranty-retailer').value,
+            itemInfo: document.getElementById('edit-warranty-item').value,
+            method: document.getElementById('edit-warranty-method').value,
+            stage: document.getElementById('edit-warranty-stage').value,
+            status: document.getElementById('edit-warranty-stage').value,
+            notes: document.getElementById('edit-warranty-notes').value
+        };
+        
+        try {
+            await db.updateWarrantyClaim(claimId, updates);
+            
+            // Update local data
+            const claimIndex = this.warrantyClaims.findIndex(c => c.id === claimId);
+            if (claimIndex !== -1) {
+                Object.assign(this.warrantyClaims[claimIndex], updates, { updatedAt: new Date().toISOString() });
+            }
+            
+            await this.renderWarrantyClaims();
+            this.hideModal();
+            this.showNotification('Warranty claim updated successfully!');
+        } catch (error) {
+            console.error('Error updating warranty claim:', error);
+            this.showNotification('Error updating warranty claim. Please try again.', 'error');
+        }
+    }
+
+    async deleteRefund(refundId) {
+        if (confirm('Are you sure you want to delete this refund? This action cannot be undone.')) {
+            try {
+                await db.deleteRefund(refundId);
+                
+                // Remove from local data
+                this.refunds = this.refunds.filter(r => r.id !== refundId);
+                
+                await this.renderRefunds();
+                this.hideModal();
+                this.showNotification('Refund deleted successfully!');
+            } catch (error) {
+                console.error('Error deleting refund:', error);
+                this.showNotification('Error deleting refund. Please try again.', 'error');
+            }
+        }
+    }
+
+    async deleteWarrantyClaim(claimId) {
+        if (confirm('Are you sure you want to delete this warranty claim? This action cannot be undone.')) {
+            try {
+                await db.deleteWarrantyClaim(claimId);
+                
+                // Remove from local data
+                this.warrantyClaims = this.warrantyClaims.filter(c => c.id !== claimId);
+                
+                await this.renderWarrantyClaims();
+                this.hideModal();
+                this.showNotification('Warranty claim deleted successfully!');
+            } catch (error) {
+                console.error('Error deleting warranty claim:', error);
+                this.showNotification('Error deleting warranty claim. Please try again.', 'error');
+            }
+        }
     }
 
     filterOrders(searchTerm) {

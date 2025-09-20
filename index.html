@@ -374,6 +374,114 @@
             </div>
         </div>
 
+        <!-- Refund Detail Modal -->
+        <div id="refund-detail-modal" class="modal modal-large" style="display: none;">
+            <div class="modal-header">
+                <h3 id="refund-detail-title">Refund Details</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div id="refund-detail-content">
+                    <!-- Refund details will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Warranty Detail Modal -->
+        <div id="warranty-detail-modal" class="modal modal-large" style="display: none;">
+            <div class="modal-header">
+                <h3 id="warranty-detail-title">Warranty Claim Details</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div id="warranty-detail-content">
+                    <!-- Warranty claim details will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Refund Modal -->
+        <div id="edit-refund-modal" class="modal" style="display: none;">
+            <div class="modal-header">
+                <h3>Edit Refund</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-content">
+                <form id="edit-refund-form">
+                    <input type="hidden" id="edit-refund-id">
+                    <div class="form-group">
+                        <label for="edit-refund-retailer">Retailer Name *</label>
+                        <input type="text" id="edit-refund-retailer" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-refund-amount">Order Amount (£) *</label>
+                        <input type="number" id="edit-refund-amount" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-refund-method">Method for Store *</label>
+                        <input type="text" id="edit-refund-method" placeholder="e.g ftid, eb etc" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-refund-stage">Current Stage *</label>
+                        <select id="edit-refund-stage" required>
+                            <option value="Planned">Planned</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Complete">Complete</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-refund-notes">Notes</label>
+                        <textarea id="edit-refund-notes" rows="3" placeholder="Add any additional details about this refund..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Refund</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Warranty Modal -->
+        <div id="edit-warranty-modal" class="modal" style="display: none;">
+            <div class="modal-header">
+                <h3>Edit Warranty Claim</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-content">
+                <form id="edit-warranty-form">
+                    <input type="hidden" id="edit-warranty-id">
+                    <div class="form-group">
+                        <label for="edit-warranty-retailer">Retailer Name *</label>
+                        <input type="text" id="edit-warranty-retailer" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-warranty-item">Item Info *</label>
+                        <textarea id="edit-warranty-item" rows="3" placeholder="Describe the item, model, serial number, etc." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-warranty-method">Method for Store *</label>
+                        <input type="text" id="edit-warranty-method" placeholder="e.g.,ftid, eb etc" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-warranty-stage">Current Stage *</label>
+                        <select id="edit-warranty-stage" required>
+                            <option value="Planned">Planned</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Complete">Complete</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-warranty-notes">Notes</label>
+                        <textarea id="edit-warranty-notes" rows="3" placeholder="Add any additional details about this warranty claim..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Warranty Claim</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Settings Modal -->
         <div id="settings-modal" class="modal" style="display: none;">
             <div class="modal-header">
