@@ -199,8 +199,17 @@ class UIManager {
     }
 
     showModal(modalId) {
+        console.log('showModal called with ID:', modalId);
         const overlay = document.getElementById('modal-overlay');
         const modal = document.getElementById(modalId);
+        
+        console.log('Overlay element:', overlay);
+        console.log('Modal element:', modal);
+        
+        if (!overlay || !modal) {
+            console.error('Modal elements not found!');
+            return;
+        }
         
         overlay.style.display = 'flex';
         modal.style.display = 'block';
@@ -508,8 +517,13 @@ class UIManager {
     }
 
     async showRefundDetail(refundId) {
+        console.log('showRefundDetail called with ID:', refundId);
         const refund = this.refunds.find(r => r.id === refundId);
-        if (!refund) return;
+        console.log('Found refund:', refund);
+        if (!refund) {
+            console.log('Refund not found');
+            return;
+        }
         
         this.currentRefund = refund;
         
@@ -562,12 +576,18 @@ class UIManager {
             </div>
         `;
         
+        console.log('About to show refund detail modal');
         this.showModal('refund-detail-modal');
     }
 
     async showWarrantyDetail(claimId) {
+        console.log('showWarrantyDetail called with ID:', claimId);
         const claim = this.warrantyClaims.find(c => c.id === claimId);
-        if (!claim) return;
+        console.log('Found warranty claim:', claim);
+        if (!claim) {
+            console.log('Warranty claim not found');
+            return;
+        }
         
         this.currentWarrantyClaim = claim;
         
@@ -620,6 +640,7 @@ class UIManager {
             </div>
         `;
         
+        console.log('About to show warranty detail modal');
         this.showModal('warranty-detail-modal');
     }
 
