@@ -103,8 +103,8 @@ class UIManager {
         });
 
         // Search inputs
-        document.getElementById('orders-search').addEventListener('input', (e) => {
-            this.filterOrders(e.target.value);
+        document.getElementById('contact-search').addEventListener('input', (e) => {
+            this.filterContacts(e.target.value);
         });
 
         document.getElementById('refunds-search').addEventListener('input', (e) => {
@@ -138,10 +138,13 @@ class UIManager {
             this.clearAllData();
         });
 
-        // Photo upload
-        document.getElementById('order-photos').addEventListener('change', (e) => {
-            this.handlePhotoUpload(e.target.files);
-        });
+        // Photo upload (if element exists)
+        const orderPhotos = document.getElementById('order-photos');
+        if (orderPhotos) {
+            orderPhotos.addEventListener('change', (e) => {
+                this.handlePhotoUpload(e.target.files);
+            });
+        }
     }
 
     async loadData() {
@@ -234,8 +237,11 @@ class UIManager {
             form.reset();
         });
         
-        // Clear photo preview
-        document.getElementById('photo-preview').innerHTML = '';
+        // Clear photo preview (if element exists)
+        const photoPreview = document.getElementById('photo-preview');
+        if (photoPreview) {
+            photoPreview.innerHTML = '';
+        }
     }
 
     async renderContacts() {
@@ -252,6 +258,12 @@ class UIManager {
         emptyContacts.style.display = 'none';
         
         contactsList.innerHTML = this.contacts.map(contact => this.createContactCard(contact)).join('');
+    }
+
+    async renderOrders() {
+        // This method is kept for compatibility but orders are no longer displayed
+        // since we replaced the Orders tab with Contacts tab
+        return;
     }
 
     createContactCard(contact) {
@@ -795,6 +807,34 @@ class UIManager {
         }
     }
 
+    filterContacts(searchTerm) {
+        const filteredContacts = this.contacts.filter(contact => 
+            contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            contact.socialPlatform.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            contact.usernameEmailPhone.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (contact.role && contact.role.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (contact.notes && contact.notes.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        
+        this.renderFilteredContacts(filteredContacts);
+    }
+
+    renderFilteredContacts(contacts) {
+        const contactsList = document.getElementById('contacts-list');
+        const emptyContacts = document.getElementById('empty-contacts');
+        
+        if (contacts.length === 0) {
+            contactsList.style.display = 'none';
+            emptyContacts.style.display = 'block';
+            return;
+        }
+        
+        contactsList.style.display = 'block';
+        emptyContacts.style.display = 'none';
+        
+        contactsList.innerHTML = contacts.map(contact => this.createContactCard(contact)).join('');
+    }
+
     filterOrders(searchTerm) {
         const filteredOrders = this.orders.filter(order => 
             order.retailerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -924,6 +964,7 @@ class UIManager {
                 this.orders = [];
                 this.refunds = [];
                 this.warrantyClaims = [];
+                this.contacts = [];
                 await this.render();
                 this.hideModal();
                 this.showNotification('All data cleared successfully!');
@@ -936,6 +977,8 @@ class UIManager {
 
     handlePhotoUpload(files) {
         const preview = document.getElementById('photo-preview');
+        if (!preview) return;
+        
         preview.innerHTML = '';
         
         Array.from(files).forEach(file => {
