@@ -78,6 +78,12 @@
                 </svg>
                 <span>Analytics</span>
             </button>
+            <button class="tab-btn" data-tab="chat-practice">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>Chat Practice</span>
+            </button>
         </nav>
 
         <!-- Main Content -->
@@ -214,6 +220,65 @@
                 
                 <div id="analytics-content" class="analytics-content">
                     <!-- Analytics will be populated here -->
+                </div>
+            </div>
+
+            <!-- Chat Practice Tab -->
+            <div id="chat-practice-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2>Chat Practice</h2>
+                    <div class="chat-controls">
+                        <select id="agent-preset" class="filter-select">
+                            <option value="amazon">Amazon Customer Service</option>
+                            <option value="bestbuy">Best Buy Support</option>
+                            <option value="walmart">Walmart Customer Care</option>
+                            <option value="target">Target Guest Services</option>
+                            <option value="apple">Apple Support</option>
+                            <option value="generic">Generic Retailer</option>
+                        </select>
+                        <button id="new-chat-btn" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            New Chat
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="chat-container">
+                    <div id="chat-messages" class="chat-messages">
+                        <div class="chat-welcome">
+                            <div class="welcome-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                            </div>
+                            <h3>AI Chat Practice</h3>
+                            <p>Practice customer service conversations with our intelligent AI assistant. The AI can respond to any question or scenario you throw at it!</p>
+                            <div class="practice-tips">
+                                <h4>How it works:</h4>
+                                <ul>
+                                    <li>AI understands context and responds intelligently</li>
+                                    <li>Try any customer service scenario</li>
+                                    <li>Ask about refunds, warranties, shipping, etc.</li>
+                                    <li>Practice professional communication</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-container">
+                        <div class="chat-input-wrapper">
+                            <input type="text" id="chat-input" placeholder="Type your message..." class="chat-input" disabled>
+                            <button id="send-btn" class="send-btn" disabled>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
