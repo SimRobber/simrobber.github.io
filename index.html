@@ -78,6 +78,15 @@
                 </svg>
                 <span>Analytics</span>
             </button>
+            <button class="tab-btn" data-tab="methods">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"></path>
+                    <rect x="9" y="11" width="6" height="11"></rect>
+                    <path d="M9 7h6v4H9z"></path>
+                    <path d="M9 3h6v4H9z"></path>
+                </svg>
+                <span>Methods</span>
+            </button>
             <button class="tab-btn" data-tab="chat-practice">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -223,27 +232,51 @@
                 </div>
             </div>
 
+            <!-- Methods Tab -->
+            <div id="methods-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2>Methods</h2>
+                    <button id="add-method-btn" class="add-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="search-container">
+                    <input type="text" id="methods-search" placeholder="Search methods..." class="search-input">
+                </div>
+                
+                <div id="methods-list" class="methods-list">
+                    <!-- Methods will be populated here -->
+                </div>
+                
+                <div id="empty-methods" class="empty-state" style="display: none;">
+                    <div class="empty-icon">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"></path>
+                            <rect x="9" y="11" width="6" height="11"></rect>
+                            <path d="M9 7h6v4H9z"></path>
+                            <path d="M9 3h6v4H9z"></path>
+                        </svg>
+                    </div>
+                    <h3>No Methods Yet</h3>
+                    <p>Add your first method to start tracking retailer methods</p>
+                </div>
+            </div>
+
             <!-- Chat Practice Tab -->
             <div id="chat-practice-tab" class="tab-content">
                 <div class="tab-header">
                     <h2>Chat Practice</h2>
-                    <div class="chat-controls">
-                        <select id="agent-preset" class="filter-select">
-                            <option value="amazon">Amazon Customer Service</option>
-                            <option value="bestbuy">Best Buy Support</option>
-                            <option value="walmart">Walmart Customer Care</option>
-                            <option value="target">Target Guest Services</option>
-                            <option value="apple">Apple Support</option>
-                            <option value="generic">Generic Retailer</option>
-                        </select>
-                        <button id="new-chat-btn" class="btn btn-primary">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                            New Chat
-                        </button>
-                    </div>
+                    <button id="new-chat-btn" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        New Chat
+                    </button>
                 </div>
                 
                 <div class="chat-container">
@@ -255,13 +288,13 @@
                                 </svg>
                             </div>
                             <h3>AI Chat Practice</h3>
-                            <p>Practice customer service conversations with our intelligent AI assistant. The AI can respond to any question or scenario you throw at it!</p>
+                            <p>Practice customer service conversations with our intelligent AI assistant. Click "New Chat" to start practicing with any scenario!</p>
                             <div class="practice-tips">
                                 <h4>How it works:</h4>
                                 <ul>
+                                    <li>Click "New Chat" to start a conversation</li>
                                     <li>AI understands context and responds intelligently</li>
                                     <li>Try any customer service scenario</li>
-                                    <li>Ask about refunds, warranties, shipping, etc.</li>
                                     <li>Practice professional communication</li>
                                 </ul>
                             </div>
@@ -520,6 +553,100 @@
                         <button type="submit" class="btn btn-primary">Update Warranty Claim</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Add Method Modal -->
+        <div id="add-method-modal" class="modal" style="display: none;">
+            <div class="modal-header">
+                <h3>Add Method</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-content">
+                <form id="add-method-form">
+                    <div class="form-group">
+                        <label for="method-retailer">Retailer *</label>
+                        <input type="text" id="method-retailer" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="method-name">Method *</label>
+                        <input type="text" id="method-name" placeholder="e.g. FTID, EB, etc." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="method-timeframe">Time Frame *</label>
+                        <input type="text" id="method-timeframe" placeholder="e.g. 30 days, 1 week, etc." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="method-tested-amount">Tested £ *</label>
+                        <input type="number" id="method-tested-amount" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="method-tested-items">Tested No. of Items *</label>
+                        <input type="number" id="method-tested-items" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="method-notes">Notes</label>
+                        <textarea id="method-notes" rows="3" placeholder="Additional information about this method..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Method</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Method Modal -->
+        <div id="edit-method-modal" class="modal" style="display: none;">
+            <div class="modal-header">
+                <h3>Edit Method</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-content">
+                <form id="edit-method-form">
+                    <input type="hidden" id="edit-method-id">
+                    <div class="form-group">
+                        <label for="edit-method-retailer">Retailer *</label>
+                        <input type="text" id="edit-method-retailer" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-method-name">Method *</label>
+                        <input type="text" id="edit-method-name" placeholder="e.g. FTID, EB, etc." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-method-timeframe">Time Frame *</label>
+                        <input type="text" id="edit-method-timeframe" placeholder="e.g. 30 days, 1 week, etc." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-method-tested-amount">Tested £ *</label>
+                        <input type="number" id="edit-method-tested-amount" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-method-tested-items">Tested No. of Items *</label>
+                        <input type="number" id="edit-method-tested-items" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-method-notes">Notes</label>
+                        <textarea id="edit-method-notes" rows="3" placeholder="Additional information about this method..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Method</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Method Detail Modal -->
+        <div id="method-detail-modal" class="modal modal-large" style="display: none;">
+            <div class="modal-header">
+                <h3 id="method-detail-title">Method Details</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div id="method-detail-content">
+                    <!-- Method details will be populated here -->
+                </div>
             </div>
         </div>
 

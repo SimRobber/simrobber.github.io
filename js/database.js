@@ -71,6 +71,14 @@ class Database {
                     const retailersStore = db.createObjectStore('retailers', { keyPath: 'id' });
                     retailersStore.createIndex('name', 'name', { unique: false });
                 }
+                
+                // Methods store
+                if (!db.objectStoreNames.contains('methods')) {
+                    const methodsStore = db.createObjectStore('methods', { keyPath: 'id' });
+                    methodsStore.createIndex('retailer', 'retailer', { unique: false });
+                    methodsStore.createIndex('method', 'method', { unique: false });
+                    methodsStore.createIndex('createdAt', 'createdAt', { unique: false });
+                }
             };
         });
     }
@@ -540,13 +548,97 @@ class Database {
         });
     }
 
+    // Methods
+    async addMethod(methodData) {
+        const transaction = this.db.transaction(['methods'], 'readwrite');
+        const store = transaction.objectStore('methods');
+        
+        const method = {
+            id: this.generateId(),
+            ...methodData,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        
+        return new Promise((resolve, reject) => {
+            const request = store.add(method);
+            request.onsuccess = () => resolve(method);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async getMethods() {
+        const transaction = this.db.transaction(['methods'], 'readonly');
+        const store = transaction.objectStore('methods');
+        const index = store.index('createdAt');
+        
+        return new Promise((resolve, reject) => {
+            const request = index.openCursor(null, 'prev');
+            const methods = [];
+            
+            request.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    methods.push(cursor.value);
+                    cursor.continue();
+                } else {
+                    resolve(methods);
+                }
+            };
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async getMethod(id) {
+        const transaction = this.db.transaction(['methods'], 'readonly');
+        const store = transaction.objectStore('methods');
+        
+        return new Promise((resolve, reject) => {
+            const request = store.get(id);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async updateMethod(id, updates) {
+        const transaction = this.db.transaction(['methods'], 'readwrite');
+        const store = transaction.objectStore('methods');
+        
+        return new Promise((resolve, reject) => {
+            const getRequest = store.get(id);
+            getRequest.onsuccess = () => {
+                const method = getRequest.result;
+                if (method) {
+                    Object.assign(method, updates, { updatedAt: new Date().toISOString() });
+                    const putRequest = store.put(method);
+                    putRequest.onsuccess = () => resolve(method);
+                    putRequest.onerror = () => reject(putRequest.error);
+                } else {
+                    reject(new Error('Method not found'));
+                }
+            };
+            getRequest.onerror = () => reject(getRequest.error);
+        });
+    }
+
+    async deleteMethod(id) {
+        const transaction = this.db.transaction(['methods'], 'readwrite');
+        const store = transaction.objectStore('methods');
+        
+        return new Promise((resolve, reject) => {
+            const request = store.delete(id);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
     // Utility methods
     generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     }
 
     async clearAllData() {
-        const stores = ['orders', 'refunds', 'warrantyClaims', 'contacts', 'communications', 'documents', 'retailers'];
+        const stores = ['orders', 'refunds', 'warrantyClaims', 'contacts', 'communications', 'documents', 'retailers', 'methods'];
         const transaction = this.db.transaction(stores, 'readwrite');
         
         const promises = stores.map(storeName => {
@@ -562,14 +654,15 @@ class Database {
     }
 
     async exportData() {
-        const [orders, refunds, warrantyClaims, contacts, communications, documents, retailers] = await Promise.all([
+        const [orders, refunds, warrantyClaims, contacts, communications, documents, retailers, methods] = await Promise.all([
             this.getOrders(),
             this.getRefunds(),
             this.getWarrantyClaims(),
             this.getContacts(),
             this.getAllCommunications(),
             this.getAllDocuments(),
-            this.getRetailers()
+            this.getRetailers(),
+            this.getMethods()
         ]);
         
         return {
@@ -580,6 +673,7 @@ class Database {
             communications,
             documents,
             retailers,
+            methods,
             exportedAt: new Date().toISOString()
         };
     }

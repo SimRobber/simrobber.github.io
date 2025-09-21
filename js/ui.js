@@ -5,13 +5,15 @@ class UIManager {
         this.currentRefund = null;
         this.currentWarrantyClaim = null;
         this.currentContact = null;
+        this.currentMethod = null;
         this.orders = [];
         this.refunds = [];
         this.warrantyClaims = [];
         this.contacts = [];
+        this.methods = [];
         this.retailers = [];
         this.chatMessages = [];
-        this.currentAgent = 'amazon';
+        this.currentAgent = 'generic';
         this.isTyping = false;
     }
 
@@ -56,6 +58,11 @@ class UIManager {
             this.showModal('add-warranty-modal');
         });
 
+        // Add method button
+        document.getElementById('add-method-btn').addEventListener('click', () => {
+            this.showModal('add-method-modal');
+        });
+
         // Settings button
         document.getElementById('settings-btn').addEventListener('click', () => {
             this.showModal('settings-modal');
@@ -93,6 +100,12 @@ class UIManager {
             this.handleAddWarrantyClaim();
         });
 
+        // Add method form
+        document.getElementById('add-method-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleAddMethod();
+        });
+
         // Edit refund form
         document.getElementById('edit-refund-form').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -103,6 +116,12 @@ class UIManager {
         document.getElementById('edit-warranty-form').addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleEditWarrantyClaim();
+        });
+
+        // Edit method form
+        document.getElementById('edit-method-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleEditMethod();
         });
 
         // Search inputs
@@ -116,6 +135,10 @@ class UIManager {
 
         document.getElementById('warranty-search').addEventListener('input', (e) => {
             this.filterWarrantyClaims(e.target.value);
+        });
+
+        document.getElementById('methods-search').addEventListener('input', (e) => {
+            this.filterMethods(e.target.value);
         });
 
         // Status filters
@@ -150,10 +173,6 @@ class UIManager {
         }
 
         // Chat Practice event listeners
-        document.getElementById('agent-preset').addEventListener('change', (e) => {
-            this.currentAgent = e.target.value;
-        });
-
         document.getElementById('new-chat-btn').addEventListener('click', () => {
             this.startNewChat();
         });
@@ -176,6 +195,7 @@ class UIManager {
             this.refunds = await db.getRefunds();
             this.warrantyClaims = await db.getWarrantyClaims();
             this.contacts = await db.getContacts();
+            this.methods = await db.getMethods();
             this.retailers = await db.getRetailers();
             
             // Load sample retailers if none exist
@@ -208,6 +228,7 @@ class UIManager {
         await this.renderContacts();
         await this.renderRefunds();
         await this.renderWarrantyClaims();
+        await this.renderMethods();
         await this.renderAnalytics();
     }
 
@@ -376,6 +397,41 @@ class UIManager {
                     <div>${claim.method}</div>
                     <div>${this.formatDate(claim.createdAt)}</div>
                 </div>
+            </div>
+        `;
+    }
+
+    async renderMethods() {
+        const methodsList = document.getElementById('methods-list');
+        const emptyMethods = document.getElementById('empty-methods');
+        
+        if (this.methods.length === 0) {
+            methodsList.style.display = 'none';
+            emptyMethods.style.display = 'block';
+            return;
+        }
+        
+        methodsList.style.display = 'block';
+        emptyMethods.style.display = 'none';
+        
+        methodsList.innerHTML = this.methods.map(method => this.createMethodCard(method)).join('');
+    }
+
+    createMethodCard(method) {
+        return `
+            <div class="method-card" onclick="ui.showMethodDetail('${method.id}')">
+                <div class="method-header">
+                    <div class="method-retailer">${method.retailer}</div>
+                    <div class="method-name">${method.method}</div>
+                </div>
+                <div class="method-details">
+                    <div class="method-timeframe">Time Frame: ${method.timeframe}</div>
+                    <div class="method-tested">Tested: £${method.testedAmount.toFixed(2)} (${method.testedItems} items)</div>
+                </div>
+                <div class="method-meta">
+                    <div>${this.formatDate(method.createdAt)}</div>
+                </div>
+                ${method.notes ? `<div class="method-notes">${method.notes}</div>` : ''}
             </div>
         `;
     }
@@ -570,6 +626,28 @@ class UIManager {
         }
     }
 
+    async handleAddMethod() {
+        const methodData = {
+            retailer: document.getElementById('method-retailer').value,
+            method: document.getElementById('method-name').value,
+            timeframe: document.getElementById('method-timeframe').value,
+            testedAmount: parseFloat(document.getElementById('method-tested-amount').value) || 0,
+            testedItems: parseInt(document.getElementById('method-tested-items').value) || 0,
+            notes: document.getElementById('method-notes').value
+        };
+        
+        try {
+            const newMethod = await db.addMethod(methodData);
+            this.methods.unshift(newMethod);
+            await this.renderMethods();
+            this.hideModal();
+            this.showNotification('Method added successfully!');
+        } catch (error) {
+            console.error('Error adding method:', error);
+            this.showNotification('Error adding method. Please try again.', 'error');
+        }
+    }
+
     async showContactDetail(contactId) {
         const contact = this.contacts.find(c => c.id === contactId);
         if (!contact) return;
@@ -697,6 +775,68 @@ class UIManager {
         this.showModal('warranty-detail-modal');
     }
 
+    async showMethodDetail(methodId) {
+        const method = this.methods.find(m => m.id === methodId);
+        if (!method) return;
+        
+        this.currentMethod = method;
+        
+        document.getElementById('method-detail-title').textContent = `${method.retailer} - Method Details`;
+        
+        document.getElementById('method-detail-content').innerHTML = `
+            <div class="detail-section">
+                <h4>Method Information</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Retailer</label>
+                        <span>${method.retailer}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Method</label>
+                        <span>${method.method}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Time Frame</label>
+                        <span>${method.timeframe}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Tested Amount</label>
+                        <span>£${method.testedAmount.toFixed(2)}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Tested Items</label>
+                        <span>${method.testedItems}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Created</label>
+                        <span>${this.formatDate(method.createdAt)}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Last Updated</label>
+                        <span>${this.formatDate(method.updatedAt)}</span>
+                    </div>
+                    ${method.notes ? `
+                        <div class="detail-item full-width">
+                            <label>Notes</label>
+                            <span>${method.notes}</span>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+            
+            <div class="detail-actions">
+                <button class="btn btn-primary" onclick="ui.showEditMethod('${method.id}')">
+                    Edit Method
+                </button>
+                <button class="btn btn-danger" onclick="ui.deleteMethod('${method.id}')">
+                    Delete Method
+                </button>
+            </div>
+        `;
+        
+        this.showModal('method-detail-modal');
+    }
+
     async showOrderDetail(orderId) {
         const order = this.orders.find(o => o.id === orderId);
         if (!order) return;
@@ -734,6 +874,23 @@ class UIManager {
         
         this.hideModal();
         this.showModal('edit-warranty-modal');
+    }
+
+    async showEditMethod(methodId) {
+        const method = this.methods.find(m => m.id === methodId);
+        if (!method) return;
+        
+        // Populate edit form
+        document.getElementById('edit-method-id').value = method.id;
+        document.getElementById('edit-method-retailer').value = method.retailer;
+        document.getElementById('edit-method-name').value = method.method;
+        document.getElementById('edit-method-timeframe').value = method.timeframe;
+        document.getElementById('edit-method-tested-amount').value = method.testedAmount;
+        document.getElementById('edit-method-tested-items').value = method.testedItems;
+        document.getElementById('edit-method-notes').value = method.notes || '';
+        
+        this.hideModal();
+        this.showModal('edit-method-modal');
     }
 
     async handleEditRefund() {
@@ -794,6 +951,35 @@ class UIManager {
         }
     }
 
+    async handleEditMethod() {
+        const methodId = document.getElementById('edit-method-id').value;
+        const updates = {
+            retailer: document.getElementById('edit-method-retailer').value,
+            method: document.getElementById('edit-method-name').value,
+            timeframe: document.getElementById('edit-method-timeframe').value,
+            testedAmount: parseFloat(document.getElementById('edit-method-tested-amount').value) || 0,
+            testedItems: parseInt(document.getElementById('edit-method-tested-items').value) || 0,
+            notes: document.getElementById('edit-method-notes').value
+        };
+        
+        try {
+            await db.updateMethod(methodId, updates);
+            
+            // Update local data
+            const methodIndex = this.methods.findIndex(m => m.id === methodId);
+            if (methodIndex !== -1) {
+                Object.assign(this.methods[methodIndex], updates, { updatedAt: new Date().toISOString() });
+            }
+            
+            await this.renderMethods();
+            this.hideModal();
+            this.showNotification('Method updated successfully!');
+        } catch (error) {
+            console.error('Error updating method:', error);
+            this.showNotification('Error updating method. Please try again.', 'error');
+        }
+    }
+
     async deleteRefund(refundId) {
         if (confirm('Are you sure you want to delete this refund? This action cannot be undone.')) {
             try {
@@ -826,6 +1012,24 @@ class UIManager {
             } catch (error) {
                 console.error('Error deleting warranty claim:', error);
                 this.showNotification('Error deleting warranty claim. Please try again.', 'error');
+            }
+        }
+    }
+
+    async deleteMethod(methodId) {
+        if (confirm('Are you sure you want to delete this method? This action cannot be undone.')) {
+            try {
+                await db.deleteMethod(methodId);
+                
+                // Remove from local data
+                this.methods = this.methods.filter(m => m.id !== methodId);
+                
+                await this.renderMethods();
+                this.hideModal();
+                this.showNotification('Method deleted successfully!');
+            } catch (error) {
+                console.error('Error deleting method:', error);
+                this.showNotification('Error deleting method. Please try again.', 'error');
             }
         }
     }
@@ -955,6 +1159,33 @@ class UIManager {
         }
     }
 
+    filterMethods(searchTerm) {
+        const filteredMethods = this.methods.filter(method => 
+            method.retailer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            method.method.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            method.timeframe.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (method.notes && method.notes.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        
+        this.renderFilteredMethods(filteredMethods);
+    }
+
+    renderFilteredMethods(methods) {
+        const methodsList = document.getElementById('methods-list');
+        const emptyMethods = document.getElementById('empty-methods');
+        
+        if (methods.length === 0) {
+            methodsList.style.display = 'none';
+            emptyMethods.style.display = 'block';
+            return;
+        }
+        
+        methodsList.style.display = 'block';
+        emptyMethods.style.display = 'none';
+        
+        methodsList.innerHTML = methods.map(method => this.createMethodCard(method)).join('');
+    }
+
     async updateAnalytics(timeframe) {
         await this.renderAnalytics();
     }
@@ -988,6 +1219,7 @@ class UIManager {
                 this.refunds = [];
                 this.warrantyClaims = [];
                 this.contacts = [];
+                this.methods = [];
                 await this.render();
                 this.hideModal();
                 this.showNotification('All data cleared successfully!');
@@ -1099,15 +1331,7 @@ class UIManager {
     }
 
     getAgentName() {
-        const names = {
-            amazon: "Sarah",
-            bestbuy: "Mike", 
-            walmart: "Jennifer",
-            target: "David",
-            apple: "Lisa",
-            generic: "Agent"
-        };
-        return names[this.currentAgent] || names.generic;
+        return "AI Assistant";
     }
 
     async sendMessage() {
@@ -1480,15 +1704,7 @@ class UIManager {
     }
 
     getRetailerName() {
-        const names = {
-            amazon: "Amazon",
-            bestbuy: "Best Buy",
-            walmart: "Walmart", 
-            target: "Target",
-            apple: "Apple",
-            generic: "our company"
-        };
-        return names[this.currentAgent] || names.generic;
+        return "our company";
     }
 
 
