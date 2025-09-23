@@ -198,6 +198,9 @@ class UIManager {
             this.methods = await db.getMethods();
             this.retailers = await db.getRetailers();
             
+            // Migrate existing refunds to include new date fields
+            this.refunds = await this.migrateRefunds(this.refunds);
+            
             // Load sample retailers if none exist
             if (this.retailers.length === 0) {
                 await this.loadSampleRetailers();
@@ -205,6 +208,44 @@ class UIManager {
         } catch (error) {
             console.error('Error loading data:', error);
         }
+    }
+
+    async migrateRefunds(refunds) {
+        const migratedRefunds = [];
+        
+        for (const refund of refunds) {
+            const migratedRefund = { ...refund };
+            let needsUpdate = false;
+            
+            // Add default values for new fields if they don't exist
+            if (!migratedRefund.deliveredDate) {
+                migratedRefund.deliveredDate = new Date().toISOString().split('T')[0];
+                needsUpdate = true;
+            }
+            if (!migratedRefund.returnDeadline) {
+                // Set return deadline to 30 days from delivered date
+                const deliveredDate = new Date(migratedRefund.deliveredDate);
+                deliveredDate.setDate(deliveredDate.getDate() + 30);
+                migratedRefund.returnDeadline = deliveredDate.toISOString().split('T')[0];
+                needsUpdate = true;
+            }
+            
+            migratedRefunds.push(migratedRefund);
+            
+            // Update in database if needed
+            if (needsUpdate) {
+                try {
+                    await db.updateRefund(refund.id, {
+                        deliveredDate: migratedRefund.deliveredDate,
+                        returnDeadline: migratedRefund.returnDeadline
+                    });
+                } catch (error) {
+                    console.error('Error updating refund during migration:', error);
+                }
+            }
+        }
+        
+        return migratedRefunds;
     }
 
     async loadSampleRetailers() {
@@ -345,6 +386,9 @@ class UIManager {
 
     createRefundCard(refund) {
         const statusClass = this.getStatusClass(refund.status);
+        const daysRemaining = this.calculateDaysRemaining(refund.returnDeadline);
+        const daysText = this.getDaysRemainingText(daysRemaining);
+        const daysClass = this.getDaysRemainingClass(daysRemaining);
         
         return `
             <div class="refund-card" onclick="ui.showRefundDetail('${refund.id}')">
@@ -360,6 +404,7 @@ class UIManager {
                     <div>${refund.stage}</div>
                     <div>${this.formatDate(refund.createdAt)}</div>
                 </div>
+                ${daysText ? `<div class="days-remaining ${daysClass}">${daysText}</div>` : ''}
             </div>
         `;
     }
@@ -589,6 +634,8 @@ class UIManager {
             method: document.getElementById('refund-method').value,
             stage: document.getElementById('refund-stage').value,
             status: document.getElementById('refund-stage').value,
+            deliveredDate: document.getElementById('refund-delivered-date').value,
+            returnDeadline: document.getElementById('refund-return-deadline').value,
             notes: document.getElementById('refund-notes').value
         };
         
@@ -667,6 +714,10 @@ class UIManager {
         
         document.getElementById('refund-detail-title').textContent = `${refund.retailerName} - Refund Details`;
         
+        const daysRemaining = this.calculateDaysRemaining(refund.returnDeadline);
+        const daysText = this.getDaysRemainingText(daysRemaining);
+        const daysClass = this.getDaysRemainingClass(daysRemaining);
+        
         document.getElementById('refund-detail-content').innerHTML = `
             <div class="detail-section">
                 <h4>Refund Information</h4>
@@ -687,6 +738,20 @@ class UIManager {
                         <label>Stage</label>
                         <span class="status-badge status-${this.getStatusClass(refund.status)}">${refund.status}</span>
                     </div>
+                    <div class="detail-item">
+                        <label>Delivered Date</label>
+                        <span>${refund.deliveredDate ? this.formatDate(refund.deliveredDate) : 'Not set'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Return Deadline</label>
+                        <span>${refund.returnDeadline ? this.formatDate(refund.returnDeadline) : 'Not set'}</span>
+                    </div>
+                    ${daysText ? `
+                        <div class="detail-item full-width">
+                            <label>Days Remaining</label>
+                            <span class="days-remaining ${daysClass}">${daysText}</span>
+                        </div>
+                    ` : ''}
                     <div class="detail-item">
                         <label>Created</label>
                         <span>${this.formatDate(refund.createdAt)}</span>
@@ -854,6 +919,8 @@ class UIManager {
         document.getElementById('edit-refund-amount').value = refund.amount;
         document.getElementById('edit-refund-method').value = refund.method;
         document.getElementById('edit-refund-stage').value = refund.status;
+        document.getElementById('edit-refund-delivered-date').value = refund.deliveredDate || '';
+        document.getElementById('edit-refund-return-deadline').value = refund.returnDeadline || '';
         document.getElementById('edit-refund-notes').value = refund.notes || '';
         
         this.hideModal();
@@ -901,6 +968,8 @@ class UIManager {
             method: document.getElementById('edit-refund-method').value,
             stage: document.getElementById('edit-refund-stage').value,
             status: document.getElementById('edit-refund-stage').value,
+            deliveredDate: document.getElementById('edit-refund-delivered-date').value,
+            returnDeadline: document.getElementById('edit-refund-return-deadline').value,
             notes: document.getElementById('edit-refund-notes').value
         };
         
@@ -1269,6 +1338,50 @@ class UIManager {
             month: 'short',
             day: 'numeric'
         });
+    }
+
+    calculateDaysRemaining(returnDeadline) {
+        if (!returnDeadline) return null;
+        
+        const today = new Date();
+        const deadline = new Date(returnDeadline);
+        
+        // Set time to start of day for accurate day calculation
+        today.setHours(0, 0, 0, 0);
+        deadline.setHours(0, 0, 0, 0);
+        
+        const timeDiff = deadline.getTime() - today.getTime();
+        const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        
+        return daysRemaining;
+    }
+
+    getDaysRemainingText(daysRemaining) {
+        if (daysRemaining === null) return '';
+        
+        if (daysRemaining < 0) {
+            return `Expired ${Math.abs(daysRemaining)} days ago`;
+        } else if (daysRemaining === 0) {
+            return 'Expires today';
+        } else if (daysRemaining === 1) {
+            return 'Expires tomorrow';
+        } else {
+            return `${daysRemaining} days remaining`;
+        }
+    }
+
+    getDaysRemainingClass(daysRemaining) {
+        if (daysRemaining === null) return '';
+        
+        if (daysRemaining < 0) {
+            return 'days-expired';
+        } else if (daysRemaining <= 3) {
+            return 'days-urgent';
+        } else if (daysRemaining <= 7) {
+            return 'days-warning';
+        } else {
+            return 'days-ok';
+        }
     }
 
     showNotification(message, type = 'success') {

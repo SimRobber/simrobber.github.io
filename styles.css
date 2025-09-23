@@ -265,6 +265,48 @@ body {
     color: #cccccc;
 }
 
+.days-remaining {
+    margin-top: 8px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.days-remaining.days-ok {
+    background: rgba(52, 199, 89, 0.2);
+    color: #34C759;
+    border: 1px solid rgba(52, 199, 89, 0.3);
+}
+
+.days-remaining.days-warning {
+    background: rgba(255, 149, 0, 0.2);
+    color: #FF9500;
+    border: 1px solid rgba(255, 149, 0, 0.3);
+}
+
+.days-remaining.days-urgent {
+    background: rgba(255, 59, 48, 0.2);
+    color: #FF3B30;
+    border: 1px solid rgba(255, 59, 48, 0.3);
+    animation: pulse 2s infinite;
+}
+
+.days-remaining.days-expired {
+    background: rgba(255, 59, 48, 0.3);
+    color: #FF3B30;
+    border: 1px solid rgba(255, 59, 48, 0.5);
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
 .order-claims {
     display: flex;
     align-items: center;

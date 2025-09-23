@@ -2,7 +2,7 @@
 class Database {
     constructor() {
         this.dbName = 'LoggerDB';
-        this.version = 1;
+        this.version = 2;
         this.db = null;
     }
 
@@ -18,6 +18,7 @@ class Database {
             
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
+                const oldVersion = event.oldVersion;
                 
                 // Orders store
                 if (!db.objectStoreNames.contains('orders')) {
@@ -32,7 +33,8 @@ class Database {
                     refundsStore.createIndex('retailerName', 'retailerName', { unique: false });
                     refundsStore.createIndex('status', 'status', { unique: false });
                     refundsStore.createIndex('createdAt', 'createdAt', { unique: false });
-                }
+                // Note: Migration for version 2 will be handled in the UI layer
+                // when refunds are loaded, we'll add default values if missing
                 
                 // Warranty Claims store
                 if (!db.objectStoreNames.contains('warrantyClaims')) {
