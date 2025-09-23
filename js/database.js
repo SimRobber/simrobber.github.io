@@ -33,6 +33,7 @@ class Database {
                     refundsStore.createIndex('retailerName', 'retailerName', { unique: false });
                     refundsStore.createIndex('status', 'status', { unique: false });
                     refundsStore.createIndex('createdAt', 'createdAt', { unique: false });
+                }
                 // Note: Migration for version 2 will be handled in the UI layer
                 // when refunds are loaded, we'll add default values if missing
                 
