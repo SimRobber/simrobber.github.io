@@ -1138,3 +1138,112 @@ body {
 .methods-list {
     margin-top: 16px;
 }
+
+/* API Status Styles */
+.api-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: #2c2c2e;
+    font-size: 14px;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-indicator.status-success {
+    background: #34c759;
+}
+
+.status-indicator.status-error {
+    background: #ff3b30;
+}
+
+.status-indicator.status-testing {
+    background: #ff9500;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.status-text {
+    color: #ffffff;
+    font-weight: 500;
+}
+
+/* Settings Form Enhancements */
+.settings-section {
+    margin-bottom: 24px;
+}
+
+.settings-section h4 {
+    margin-bottom: 16px;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.settings-section .form-group {
+    margin-bottom: 16px;
+}
+
+.settings-section .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.settings-section .form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    background: #2c2c2e;
+    border: 1px solid #3a3a3c;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+.settings-section .form-group input:focus {
+    outline: none;
+    border-color: #007aff;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.settings-section .form-group small {
+    display: block;
+    margin-top: 4px;
+    color: #8e8e93;
+    font-size: 12px;
+}
+
+.settings-section .form-group small a {
+    color: #007aff;
+    text-decoration: none;
+}
+
+.settings-section .form-group small a:hover {
+    text-decoration: underline;
+}
+
+.settings-section .form-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.settings-section .form-actions .btn {
+    flex: 1;
+    min-width: 120px;
+}

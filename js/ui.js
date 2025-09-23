@@ -21,7 +21,17 @@ class UIManager {
         await this.setupEventListeners();
         await this.loadData();
         await this.render();
+        await this.initializeAIService();
         this.hideLoadingScreen();
+    }
+
+    async initializeAIService() {
+        try {
+            await aiService.init();
+            this.updateAPIStatus();
+        } catch (error) {
+            console.error('Error initializing AI service:', error);
+        }
     }
 
     hideLoadingScreen() {
@@ -162,6 +172,19 @@ class UIManager {
 
         document.getElementById('clear-data-btn').addEventListener('click', () => {
             this.clearAllData();
+        });
+
+        // AI Service event listeners
+        document.getElementById('save-api-key-btn').addEventListener('click', () => {
+            this.saveAPIKey();
+        });
+
+        document.getElementById('test-api-key-btn').addEventListener('click', () => {
+            this.testAPIKey();
+        });
+
+        document.getElementById('clear-api-key-btn').addEventListener('click', () => {
+            this.clearAPIKey();
         });
 
         // Photo upload (if element exists)
@@ -1503,15 +1526,16 @@ class UIManager {
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>
                     </div>
-                    <h3>Welcome to Chat Practice!</h3>
-                    <p>Practice your customer service conversations with AI agents. Select a retailer preset above and start chatting!</p>
+                    <h3>AI Customer Support Chat</h3>
+                    <p>Practice customer service conversations with our intelligent AI assistant powered by Cursor API. Click "New Chat" to start practicing with any scenario!</p>
                     <div class="practice-tips">
-                        <h4>Practice Tips:</h4>
+                        <h4>How it works:</h4>
                         <ul>
-                            <li>Be polite and professional</li>
-                            <li>Clearly explain your issue</li>
-                            <li>Ask for specific solutions</li>
-                            <li>Keep records of the conversation</li>
+                            <li>Configure your Cursor API key in Settings</li>
+                            <li>Click "New Chat" to start a conversation</li>
+                            <li>AI understands context and responds intelligently</li>
+                            <li>Try any customer service scenario</li>
+                            <li>Practice professional communication</li>
                         </ul>
                     </div>
                 </div>
@@ -1566,13 +1590,18 @@ class UIManager {
 
     async generateAIResponse(userMessage) {
         try {
-            // Use a free AI API - we'll use Hugging Face's free inference API
-            const response = await this.callAIAPI(userMessage);
+            // Check if AI service is available
+            if (!aiService.hasApiKey()) {
+                return "AI chat is not configured. Please add your Cursor API key in settings to use AI-powered customer support.";
+            }
+
+            // Use the real AI service
+            const response = await aiService.generateResponse(userMessage, this.getRetailerName());
             return response;
         } catch (error) {
-            console.error('AI API Error:', error);
-            // Fallback to a simple response if AI fails
-            return "I apologize, but I'm having trouble processing your request right now. Could you please try rephrasing your question?";
+            console.error('AI Service Error:', error);
+            // Return user-friendly error message
+            return `I apologize, but I'm having trouble processing your request right now. ${error.message}`;
         }
     }
 
@@ -1825,6 +1854,94 @@ class UIManager {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // AI Service Management Methods
+    async saveAPIKey() {
+        const apiKeyInput = document.getElementById('api-key-input');
+        const apiKey = apiKeyInput.value.trim();
+        
+        if (!apiKey) {
+            this.showNotification('Please enter a valid API key', 'error');
+            return;
+        }
+
+        try {
+            aiService.setApiKey(apiKey);
+            this.updateAPIStatus();
+            this.showNotification('API key saved successfully!', 'success');
+        } catch (error) {
+            console.error('Error saving API key:', error);
+            this.showNotification('Error saving API key', 'error');
+        }
+    }
+
+    async testAPIKey() {
+        const apiKeyInput = document.getElementById('api-key-input');
+        const apiKey = apiKeyInput.value.trim();
+        
+        if (!apiKey) {
+            this.showNotification('Please enter an API key first', 'error');
+            return;
+        }
+
+        // Temporarily set the API key for testing
+        const originalKey = aiService.apiKey;
+        aiService.setApiKey(apiKey);
+
+        try {
+            this.showAPIStatus('Testing connection...', 'testing');
+            const result = await aiService.testConnection();
+            
+            if (result.success) {
+                this.showAPIStatus('Connection successful!', 'success');
+                this.showNotification('API connection test successful!', 'success');
+            } else {
+                this.showAPIStatus(`Connection failed: ${result.error}`, 'error');
+                this.showNotification(`API test failed: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            this.showAPIStatus(`Test error: ${error.message}`, 'error');
+            this.showNotification(`API test error: ${error.message}`, 'error');
+        } finally {
+            // Restore original key if test failed
+            if (originalKey) {
+                aiService.setApiKey(originalKey);
+            }
+        }
+    }
+
+    async clearAPIKey() {
+        if (confirm('Are you sure you want to clear the API key? This will disable AI chat functionality.')) {
+            try {
+                aiService.clearApiKey();
+                document.getElementById('api-key-input').value = '';
+                this.updateAPIStatus();
+                this.showNotification('API key cleared successfully', 'success');
+            } catch (error) {
+                console.error('Error clearing API key:', error);
+                this.showNotification('Error clearing API key', 'error');
+            }
+        }
+    }
+
+    updateAPIStatus() {
+        const statusDiv = document.getElementById('api-status');
+        if (aiService.hasApiKey()) {
+            this.showAPIStatus('API key configured', 'success');
+        } else {
+            this.showAPIStatus('No API key configured', 'error');
+        }
+    }
+
+    showAPIStatus(message, type) {
+        const statusDiv = document.getElementById('api-status');
+        const statusText = statusDiv.querySelector('.status-text');
+        const statusIndicator = statusDiv.querySelector('.status-indicator');
+        
+        statusText.textContent = message;
+        statusIndicator.className = `status-indicator status-${type}`;
+        statusDiv.style.display = 'flex';
     }
 }
 
