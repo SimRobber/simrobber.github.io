@@ -675,14 +675,12 @@
                 <div class="settings-section">
                     <h4>AI Chat Configuration</h4>
                     <div class="form-group">
-                        <label for="api-key-input">Cursor API Key</label>
-                        <input type="password" id="api-key-input" placeholder="Enter your Cursor API key">
-                        <small>Get your API key from <a href="https://cursor.sh/api" target="_blank">cursor.sh/api</a></small>
+                        <label>Free AI Chat</label>
+                        <p style="color: #8e8e93; font-size: 14px; margin: 8px 0;">This AI chat uses Hugging Face's free API - no API key required!</p>
+                        <small>Powered by <a href="https://huggingface.co/" target="_blank">Hugging Face</a> - completely free to use</small>
                     </div>
                     <div class="form-actions">
-                        <button id="save-api-key-btn" class="btn btn-primary">Save API Key</button>
-                        <button id="test-api-key-btn" class="btn btn-outline">Test Connection</button>
-                        <button id="clear-api-key-btn" class="btn btn-danger">Clear API Key</button>
+                        <button id="test-api-key-btn" class="btn btn-outline">Test AI Connection</button>
                     </div>
                     <div id="api-status" class="api-status" style="display: none;">
                         <div class="status-indicator"></div>
