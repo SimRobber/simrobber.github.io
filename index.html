@@ -20,6 +20,9 @@
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
     
+    <!-- Puter.js for free AI access -->
+    <script src="https://js.puter.com/v2/"></script>
+    
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
     
@@ -29,7 +32,7 @@
     <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">
         <div class="loading-spinner"></div>
-        <p>Loading Logger...</p>
+        <p>Loading Logger v1.1.0</p>
     </div>
 
     <!-- Main App Container -->
@@ -400,8 +403,11 @@
                         <input type="date" id="refund-delivered-date" required>
                     </div>
                     <div class="form-group">
-                        <label for="refund-return-deadline">Return Deadline *</label>
-                        <input type="date" id="refund-return-deadline" required>
+                        <label for="refund-return-days">Return Period (Days) *</label>
+                        <input type="number" id="refund-return-days" min="1" max="365" placeholder="e.g. 14, 30, 60" required>
+                        <small style="color: #8e8e93; font-size: 12px; margin-top: 4px; display: block;">
+                            Number of days from delivery date to return deadline
+                        </small>
                     </div>
                     <div class="form-group">
                         <label for="refund-notes">Notes</label>
@@ -515,8 +521,11 @@
                         <input type="date" id="edit-refund-delivered-date" required>
                     </div>
                     <div class="form-group">
-                        <label for="edit-refund-return-deadline">Return Deadline *</label>
-                        <input type="date" id="edit-refund-return-deadline" required>
+                        <label for="edit-refund-return-days">Return Period (Days) *</label>
+                        <input type="number" id="edit-refund-return-days" min="1" max="365" placeholder="e.g. 14, 30, 60" required>
+                        <small style="color: #8e8e93; font-size: 12px; margin-top: 4px; display: block;">
+                            Number of days from delivery date to return deadline
+                        </small>
                     </div>
                     <div class="form-group">
                         <label for="edit-refund-notes">Notes</label>
@@ -676,11 +685,22 @@
                     <h4>AI Chat Configuration</h4>
                     <div class="form-group">
                         <label>Free AI Chat</label>
-                        <p style="color: #8e8e93; font-size: 14px; margin: 8px 0;">This AI chat uses Hugging Face's free API - no API key required!</p>
-                        <small>Powered by <a href="https://huggingface.co/" target="_blank">Hugging Face</a> - completely free to use</small>
+                        <p style="color: #8e8e93; font-size: 14px; margin: 8px 0;">This AI chat uses Puter.js for free, unlimited OpenAI API access - completely free!</p>
+                        <small>Powered by <a href="https://developer.puter.com/tutorials/free-unlimited-openai-api/" target="_blank">Puter.js</a> - GPT-5, GPT-4o, and more models available</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="ai-model-select">AI Model</label>
+                        <select id="ai-model-select">
+                            <option value="o1">O1 (Advanced Reasoning) - Best for complex scenarios</option>
+                            <option value="gpt-4o-mini">GPT-4o Mini (Fast & Efficient) - Quick responses</option>
+                        </select>
+                        <small style="color: #8e8e93; font-size: 12px; margin-top: 4px; display: block;">
+                            O1: Better reasoning, empathy, and complex problem-solving<br>
+                            GPT-4o Mini: Faster responses, good for quick interactions
+                        </small>
                     </div>
                     <div class="form-actions">
-                        <button id="test-api-key-btn" class="btn btn-outline">Test AI Connection</button>
+                        <button id="test-api-key-btn" class="btn btn-outline">Test AI System</button>
                     </div>
                     <div id="api-status" class="api-status" style="display: none;">
                         <div class="status-indicator"></div>

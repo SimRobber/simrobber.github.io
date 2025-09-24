@@ -179,6 +179,14 @@ class UIManager {
             this.testAPIKey();
         });
 
+        // AI Model selection
+        document.getElementById('ai-model-select').addEventListener('change', (e) => {
+            const selectedModel = e.target.value;
+            aiService.setModel(selectedModel);
+            this.showNotification(`AI model changed to ${selectedModel}`, 'success');
+            console.log('AI model changed to:', selectedModel);
+        });
+
         // Photo upload (if element exists)
         const orderPhotos = document.getElementById('order-photos');
         if (orderPhotos) {
@@ -237,11 +245,17 @@ class UIManager {
                 migratedRefund.deliveredDate = new Date().toISOString().split('T')[0];
                 needsUpdate = true;
             }
+            if (!migratedRefund.returnDays) {
+                // Set default return period to 30 days
+                migratedRefund.returnDays = 30;
+                needsUpdate = true;
+            }
             if (!migratedRefund.returnDeadline) {
-                // Set return deadline to 30 days from delivered date
-                const deliveredDate = new Date(migratedRefund.deliveredDate);
-                deliveredDate.setDate(deliveredDate.getDate() + 30);
-                migratedRefund.returnDeadline = deliveredDate.toISOString().split('T')[0];
+                // Calculate return deadline from delivered date + return days
+                migratedRefund.returnDeadline = this.calculateReturnDeadline(
+                    migratedRefund.deliveredDate, 
+                    migratedRefund.returnDays
+                );
                 needsUpdate = true;
             }
             
@@ -252,6 +266,7 @@ class UIManager {
                 try {
                     await db.updateRefund(refund.id, {
                         deliveredDate: migratedRefund.deliveredDate,
+                        returnDays: migratedRefund.returnDays,
                         returnDeadline: migratedRefund.returnDeadline
                     });
                 } catch (error) {
@@ -401,7 +416,7 @@ class UIManager {
 
     createRefundCard(refund) {
         const statusClass = this.getStatusClass(refund.status);
-        const daysRemaining = this.calculateDaysRemaining(refund.returnDeadline);
+        const daysRemaining = this.calculateDaysRemaining(refund.deliveredDate, refund.returnDays);
         const daysText = this.getDaysRemainingText(daysRemaining);
         const daysClass = this.getDaysRemainingClass(daysRemaining);
         
@@ -643,14 +658,19 @@ class UIManager {
     }
 
     async handleAddRefund() {
+        const deliveredDate = document.getElementById('refund-delivered-date').value;
+        const returnDays = parseInt(document.getElementById('refund-return-days').value);
+        const returnDeadline = this.calculateReturnDeadline(deliveredDate, returnDays);
+        
         const refundData = {
             retailerName: document.getElementById('refund-retailer').value,
             amount: parseFloat(document.getElementById('refund-amount').value) || 0,
             method: document.getElementById('refund-method').value,
             stage: document.getElementById('refund-stage').value,
             status: document.getElementById('refund-stage').value,
-            deliveredDate: document.getElementById('refund-delivered-date').value,
-            returnDeadline: document.getElementById('refund-return-deadline').value,
+            deliveredDate: deliveredDate,
+            returnDays: returnDays,
+            returnDeadline: returnDeadline,
             notes: document.getElementById('refund-notes').value
         };
         
@@ -729,7 +749,7 @@ class UIManager {
         
         document.getElementById('refund-detail-title').textContent = `${refund.retailerName} - Refund Details`;
         
-        const daysRemaining = this.calculateDaysRemaining(refund.returnDeadline);
+        const daysRemaining = this.calculateDaysRemaining(refund.deliveredDate, refund.returnDays);
         const daysText = this.getDaysRemainingText(daysRemaining);
         const daysClass = this.getDaysRemainingClass(daysRemaining);
         
@@ -758,8 +778,12 @@ class UIManager {
                         <span>${refund.deliveredDate ? this.formatDate(refund.deliveredDate) : 'Not set'}</span>
                     </div>
                     <div class="detail-item">
+                        <label>Return Period</label>
+                        <span>${refund.returnDays ? refund.returnDays + ' days' : 'Not set'}</span>
+                    </div>
+                    <div class="detail-item">
                         <label>Return Deadline</label>
-                        <span>${refund.returnDeadline ? this.formatDate(refund.returnDeadline) : 'Not set'}</span>
+                        <span>${refund.returnDeadline ? this.formatDate(refund.returnDeadline) : 'Not calculated'}</span>
                     </div>
                     ${daysText ? `
                         <div class="detail-item full-width">
@@ -935,7 +959,7 @@ class UIManager {
         document.getElementById('edit-refund-method').value = refund.method;
         document.getElementById('edit-refund-stage').value = refund.status;
         document.getElementById('edit-refund-delivered-date').value = refund.deliveredDate || '';
-        document.getElementById('edit-refund-return-deadline').value = refund.returnDeadline || '';
+        document.getElementById('edit-refund-return-days').value = refund.returnDays || '';
         document.getElementById('edit-refund-notes').value = refund.notes || '';
         
         this.hideModal();
@@ -977,14 +1001,19 @@ class UIManager {
 
     async handleEditRefund() {
         const refundId = document.getElementById('edit-refund-id').value;
+        const deliveredDate = document.getElementById('edit-refund-delivered-date').value;
+        const returnDays = parseInt(document.getElementById('edit-refund-return-days').value);
+        const returnDeadline = this.calculateReturnDeadline(deliveredDate, returnDays);
+        
         const updates = {
             retailerName: document.getElementById('edit-refund-retailer').value,
             amount: parseFloat(document.getElementById('edit-refund-amount').value) || 0,
             method: document.getElementById('edit-refund-method').value,
             stage: document.getElementById('edit-refund-stage').value,
             status: document.getElementById('edit-refund-stage').value,
-            deliveredDate: document.getElementById('edit-refund-delivered-date').value,
-            returnDeadline: document.getElementById('edit-refund-return-deadline').value,
+            deliveredDate: deliveredDate,
+            returnDays: returnDays,
+            returnDeadline: returnDeadline,
             notes: document.getElementById('edit-refund-notes').value
         };
         
@@ -1355,11 +1384,13 @@ class UIManager {
         });
     }
 
-    calculateDaysRemaining(returnDeadline) {
-        if (!returnDeadline) return null;
+    calculateDaysRemaining(deliveredDate, returnDays) {
+        if (!deliveredDate || !returnDays) return null;
         
         const today = new Date();
-        const deadline = new Date(returnDeadline);
+        const delivered = new Date(deliveredDate);
+        const deadline = new Date(delivered);
+        deadline.setDate(deadline.getDate() + parseInt(returnDays));
         
         // Set time to start of day for accurate day calculation
         today.setHours(0, 0, 0, 0);
@@ -1369,6 +1400,16 @@ class UIManager {
         const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
         
         return daysRemaining;
+    }
+
+    calculateReturnDeadline(deliveredDate, returnDays) {
+        if (!deliveredDate || !returnDays) return null;
+        
+        const delivered = new Date(deliveredDate);
+        const deadline = new Date(delivered);
+        deadline.setDate(deadline.getDate() + parseInt(returnDays));
+        
+        return deadline.toISOString().split('T')[0];
     }
 
     getDaysRemainingText(daysRemaining) {
@@ -1519,11 +1560,12 @@ class UIManager {
                         </svg>
                     </div>
                     <h3>Free AI Customer Support Chat</h3>
-                    <p>Practice customer service conversations with our intelligent AI assistant powered by Hugging Face - completely free! Click "New Chat" to start practicing with any scenario!</p>
+                    <p>Practice customer service conversations with our intelligent AI assistant! Choose between O1 (advanced reasoning) or GPT-4o Mini (fast responses) in Settings. Click "New Chat" to start practicing!</p>
                     <div class="practice-tips">
                         <h4>How it works:</h4>
                         <ul>
-                            <li>No API key required - completely free!</li>
+                            <li>Uses Puter.js for free, unlimited OpenAI API access</li>
+                            <li>Choose your AI model in Settings (O1 or GPT-4o Mini)</li>
                             <li>Click "New Chat" to start a conversation</li>
                             <li>AI understands context and responds intelligently</li>
                             <li>Try any customer service scenario</li>
@@ -1864,7 +1906,7 @@ class UIManager {
 
     updateAPIStatus() {
         const statusDiv = document.getElementById('api-status');
-        this.showAPIStatus('Free AI chat ready', 'success');
+        this.showAPIStatus('Puter.js AI system ready', 'success');
     }
 
     showAPIStatus(message, type) {

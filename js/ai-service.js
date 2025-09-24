@@ -1,17 +1,14 @@
-// AI Service for Customer Support Chat using Hugging Face Free API
+// AI Service for Customer Support Chat using Free AI API
 class AIService {
     constructor() {
-        this.apiKey = null; // Not needed for free tier
-        this.baseUrl = 'https://api-inference.huggingface.co/models';
-        this.model = 'microsoft/DialoGPT-medium'; // Free conversational AI model
-        this.maxTokens = 500;
-        this.temperature = 0.7;
+        this.apiKey = 'free'; // Always free
         this.conversationHistory = [];
         this.maxHistoryLength = 10; // Keep last 10 exchanges
+        this.selectedModel = 'o1'; // Default to O1 for better customer support
     }
 
     async init() {
-        // No API key needed for free Hugging Face API
+        // No API key needed for free service
         this.apiKey = 'free';
         return true;
     }
@@ -30,6 +27,24 @@ class AIService {
     hasApiKey() {
         // Always available for free tier
         return true;
+    }
+
+    // Get selected AI model
+    getSelectedModel() {
+        const modelSelect = document.getElementById('ai-model-select');
+        if (modelSelect) {
+            this.selectedModel = modelSelect.value;
+        }
+        return this.selectedModel;
+    }
+
+    // Set AI model
+    setModel(model) {
+        this.selectedModel = model;
+        const modelSelect = document.getElementById('ai-model-select');
+        if (modelSelect) {
+            modelSelect.value = model;
+        }
     }
 
     // Build system prompt for customer support agent
@@ -70,47 +85,43 @@ Current conversation context: ${this.conversationHistory.length > 0 ? 'Ongoing c
         this.conversationHistory = [];
     }
 
-    // Generate AI response using Hugging Face Free API
+    // Wait for Puter.js to be ready
+    async waitForPuter() {
+        return new Promise((resolve, reject) => {
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max wait
+            
+            const checkPuter = () => {
+                attempts++;
+                if (typeof puter !== 'undefined' && puter.ai) {
+                    console.log('Puter.js is ready');
+                    resolve();
+                } else if (attempts >= maxAttempts) {
+                    console.log('Puter.js not ready after 5 seconds');
+                    reject(new Error('Puter.js not ready'));
+                } else {
+                    setTimeout(checkPuter, 100);
+                }
+            };
+            
+            checkPuter();
+        });
+    }
+
+    // Generate AI response using Free AI API
     async generateResponse(userMessage, retailer = 'our company') {
         try {
             // Add user message to history
             this.addToHistory('user', userMessage);
 
-            // Build context from conversation history
-            const context = this.buildConversationContext();
-            const prompt = `${this.buildSystemPrompt(retailer)}\n\n${context}Customer: ${userMessage}\nAgent:`;
-
-            const response = await fetch(`${this.baseUrl}/${this.model}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    inputs: prompt,
-                    parameters: {
-                        max_new_tokens: this.maxTokens,
-                        temperature: this.temperature,
-                        return_full_text: false,
-                        do_sample: true
-                    }
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(`API Error: ${response.status} - ${errorData.error || response.statusText}`);
+            // Try to use a free AI service first
+            let aiResponse;
+            try {
+                aiResponse = await this.callFreeAIService(userMessage, retailer);
+            } catch (apiError) {
+                console.log('Free AI API unavailable, using intelligent fallback');
+                aiResponse = this.generateIntelligentResponse(userMessage, retailer);
             }
-
-            const data = await response.json();
-            
-            if (!data || !Array.isArray(data) || !data[0] || !data[0].generated_text) {
-                throw new Error('Invalid response format from AI service');
-            }
-
-            let aiResponse = data[0].generated_text.trim();
-            
-            // Clean up the response
-            aiResponse = this.cleanResponse(aiResponse);
             
             // Add AI response to history
             this.addToHistory('assistant', aiResponse);
@@ -119,49 +130,287 @@ Current conversation context: ${this.conversationHistory.length > 0 ? 'Ongoing c
 
         } catch (error) {
             console.error('AI Service Error:', error);
+            // Fallback to rule-based responses
+            return this.getFallbackResponse(userMessage, retailer);
+        }
+    }
+
+    // Call free AI service using Puter.js
+    async callFreeAIService(userMessage, retailer) {
+        // Wait for Puter.js to be ready
+        await this.waitForPuter();
+        
+        // Check if Puter.js is loaded
+        if (typeof puter === 'undefined' || !puter.ai) {
+            console.log('Puter.js not loaded, using fallback');
+            throw new Error('Puter.js not available');
+        }
+
+        // Use Puter.js for free, unlimited OpenAI API access
+        const prompt = `You are a professional customer support agent for ${retailer}. Respond to this customer message in a helpful, empathetic way. Keep responses concise but comprehensive (2-3 sentences). Be professional and offer specific solutions when possible.
+
+Customer: ${userMessage}
+
+Agent:`;
+
+        try {
+            console.log('Calling Puter.js with prompt:', prompt);
+            // Get the selected model
+            const selectedModel = this.getSelectedModel();
+            console.log('Using model:', selectedModel);
             
-            // Return fallback response based on error type
-            if (error.message.includes('network') || error.message.includes('fetch')) {
-                throw new Error('Network error. Please check your internet connection and try again.');
-            } else if (error.message.includes('rate limit') || error.message.includes('quota')) {
-                throw new Error('Rate limit exceeded. Please wait a moment and try again.');
-            } else {
-                // Fallback to rule-based responses
-                return this.getFallbackResponse(userMessage, retailer);
+            // Use Puter.js with selected model
+            const response = await puter.ai.chat(prompt, { 
+                model: selectedModel,
+                max_tokens: selectedModel === 'o1' ? 300 : 150
+            });
+
+            console.log('Puter.js response:', response);
+            if (response && response.message && response.message.content) {
+                let aiResponse = response.message.content.trim();
+                // Clean up the response
+                aiResponse = aiResponse.replace(/^Agent:\s*/, '');
+                aiResponse = aiResponse.replace(/^Customer:\s*/, '');
+                aiResponse = aiResponse.split('\n')[0];
+                if (!aiResponse.endsWith('.') && !aiResponse.endsWith('!') && !aiResponse.endsWith('?')) {
+                    aiResponse += '.';
+                }
+                return aiResponse.trim();
             }
+        } catch (error) {
+            console.log('Puter.js failed:', error.message || error);
         }
+
+        // Try alternative model if first one fails
+        try {
+            console.log('Trying alternative model...');
+            const response = await puter.ai.chat(prompt, { 
+                model: "gpt-4o-mini",
+                temperature: 0.7,
+                max_tokens: 150
+            });
+
+            console.log('Puter.js alternative response:', response);
+            if (response && response.message && response.message.content) {
+                let aiResponse = response.message.content.trim();
+                // Clean up the response
+                aiResponse = aiResponse.replace(/^Agent:\s*/, '');
+                aiResponse = aiResponse.replace(/^Customer:\s*/, '');
+                aiResponse = aiResponse.split('\n')[0];
+                if (!aiResponse.endsWith('.') && !aiResponse.endsWith('!') && !aiResponse.endsWith('?')) {
+                    aiResponse += '.';
+                }
+                console.log('Processed response:', aiResponse);
+                return aiResponse.trim();
+            } else {
+                console.log('No valid response from alternative model');
+            }
+        } catch (error) {
+            console.log('Puter.js alternative model failed:', error.message || error);
+        }
+
+        // If all APIs fail, throw error to use fallback
+        throw new Error('All free AI services unavailable');
     }
 
-    // Build conversation context from history
-    buildConversationContext() {
-        if (this.conversationHistory.length === 0) {
-            return '';
+    // Generate intelligent response using local AI
+    generateIntelligentResponse(userMessage, retailer) {
+        const message = userMessage.toLowerCase();
+        const context = this.analyzeMessageContext(userMessage);
+        const sentiment = this.analyzeSentiment(userMessage);
+        
+        // Handle specific patterns with more intelligent responses
+        if (context.isGreeting) {
+            return this.getRandomResponse(this.getGreetingResponses(), retailer);
         }
-
-        let context = '';
-        for (let i = Math.max(0, this.conversationHistory.length - 6); i < this.conversationHistory.length; i++) {
-            const msg = this.conversationHistory[i];
-            const role = msg.role === 'user' ? 'Customer' : 'Agent';
-            context += `${role}: ${msg.content}\n`;
+        
+        if (context.isFarewell) {
+            return this.getRandomResponse(this.getFarewellResponses(), retailer);
         }
-        return context;
+        
+        if (context.isComplaint && sentiment === 'negative') {
+            return this.getRandomResponse(this.getComplaintResponses(), retailer);
+        }
+        
+        if (context.isRefund) {
+            return this.getRandomResponse(this.getRefundResponses(), retailer);
+        }
+        
+        if (context.isTechnical) {
+            return this.getRandomResponse(this.getTechnicalResponses(), retailer);
+        }
+        
+        if (context.isShipping) {
+            return this.getRandomResponse(this.getShippingResponses(), retailer);
+        }
+        
+        if (context.isWarranty) {
+            return this.getRandomResponse(this.getWarrantyResponses(), retailer);
+        }
+        
+        if (context.isQuestion) {
+            return this.getRandomResponse(this.getQuestionResponses(), retailer);
+        }
+        
+        // Generate contextual response based on conversation history
+        return this.generateContextualResponse(userMessage, retailer, context, sentiment);
     }
 
-    // Clean up AI response
-    cleanResponse(response) {
-        // Remove any remaining prompt text
-        response = response.replace(/^Agent:\s*/, '');
-        response = response.replace(/^Customer:\s*/, '');
+    // Get random response from pattern array
+    getRandomResponse(patterns, retailer) {
+        const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+        return pattern.replace('{retailer}', retailer);
+    }
+
+    // Get greeting responses
+    getGreetingResponses() {
+        return [
+            "Hello! Thank you for contacting {retailer} customer service. How can I assist you today?",
+            "Hi there! Welcome to {retailer} support. What can I help you with?",
+            "Good day! I'm here to help you with any questions or concerns you may have. How can I assist you?",
+            "Hello! I'm here to provide you with excellent customer service. What brings you here today?"
+        ];
+    }
+
+    // Get farewell responses
+    getFarewellResponses() {
+        return [
+            "Thank you for contacting {retailer}! Have a wonderful day, and please don't hesitate to reach out if you need any further assistance.",
+            "It was my pleasure to help you today. If you have any other questions, feel free to contact us anytime!",
+            "Thank you for choosing {retailer}! I hope I was able to help, and please don't hesitate to reach out if you need anything else."
+        ];
+    }
+
+    // Get complaint responses
+    getComplaintResponses() {
+        return [
+            "I'm truly sorry for the frustration you're experiencing. I want to make sure we resolve this for you. Can you tell me more about what happened so I can help make this right?",
+            "I understand how upsetting this must be, and I sincerely apologize. Let me work with you to find a solution that addresses your concerns.",
+            "I'm sorry that we've let you down. Your satisfaction is important to us, and I'm committed to helping you resolve this issue."
+        ];
+    }
+
+    // Get refund responses
+    getRefundResponses() {
+        return [
+            "I understand you'd like to process a refund. I'd be happy to help you with that. Could you please provide your order number so I can look up your purchase and assist you further?",
+            "I can definitely help you with a refund request. To get started, I'll need your order number so I can locate your purchase in our system.",
+            "I'm sorry to hear you need to return an item. Let me help you process that refund. Could you share your order number with me?"
+        ];
+    }
+
+    // Get technical responses
+    getTechnicalResponses() {
+        return [
+            "I'm sorry to hear about the technical issue you're experiencing. That's definitely not what we want for our customers. Can you tell me more about what's happening so I can help you get this resolved?",
+            "I understand you're having technical difficulties. Let me help you troubleshoot this issue. What specific problem are you encountering?",
+            "I'm here to help resolve any technical issues you're facing. Could you provide more details about what's not working as expected?"
+        ];
+    }
+
+    // Get shipping responses
+    getShippingResponses() {
+        return [
+            "I can help you with shipping information. Do you have your order number or tracking number available? I can look up the current status and provide you with updates.",
+            "Let me check on your shipping status for you. Could you provide your order number or tracking number so I can give you the most accurate information?",
+            "I'd be happy to help you track your package. What's your order number or tracking number?"
+        ];
+    }
+
+    // Get warranty responses
+    getWarrantyResponses() {
+        return [
+            "I'd be happy to help you with warranty information or service options. What product are you asking about, and what specific issue are you experiencing?",
+            "I can assist you with warranty claims and service requests. Could you tell me more about the product and the issue you're having?",
+            "Let me help you with your warranty inquiry. What product needs service, and what problems are you experiencing?"
+        ];
+    }
+
+    // Get question responses
+    getQuestionResponses() {
+        return [
+            "That's a great question! Let me help you with that. Could you provide a bit more detail so I can give you the most accurate information?",
+            "I'd be happy to answer that for you. To give you the best possible assistance, could you share some additional context?",
+            "Excellent question! I want to make sure I provide you with the most helpful answer. What specific aspect would you like me to focus on?"
+        ];
+    }
+
+    // Analyze message context
+    analyzeMessageContext(message) {
+        const lowerMessage = message.toLowerCase();
         
-        // Remove any incomplete sentences at the end
-        response = response.replace(/\n.*$/, '');
+        return {
+            isGreeting: /^(hi|hello|hey|good morning|good afternoon|good evening)/i.test(message),
+            isFarewell: /(bye|goodbye|see you|thanks|thank you|have a good)/i.test(message),
+            isComplaint: /(angry|frustrated|upset|disappointed|terrible|awful|horrible|worst)/i.test(message),
+            isUrgent: /(urgent|asap|immediately|right now|emergency)/i.test(message),
+            isQuestion: message.includes('?') || /(how|what|when|where|why|can you|could you|would you)/i.test(message),
+            isRefund: /(refund|return|money back|credit|reimburse)/i.test(message),
+            isTechnical: /(broken|not working|defective|damaged|error|issue|problem|bug)/i.test(message),
+            isShipping: /(shipping|delivery|tracking|shipped|arrived|package)/i.test(message),
+            isWarranty: /(warranty|repair|service|fix|replacement)/i.test(message),
+            isOrder: /(order|purchase|bought|billing|charge|payment)/i.test(message),
+            isPricing: /(price|cost|expensive|cheap|discount|sale)/i.test(message),
+            isCancellation: /(cancel|stop|unsubscribe|remove)/i.test(message)
+        };
+    }
+
+    // Analyze sentiment
+    analyzeSentiment(message) {
+        const positiveWords = ['good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'love', 'happy', 'pleased', 'satisfied'];
+        const negativeWords = ['bad', 'terrible', 'awful', 'horrible', 'hate', 'angry', 'frustrated', 'disappointed', 'upset', 'annoyed'];
         
-        // Ensure it ends properly
-        if (!response.endsWith('.') && !response.endsWith('!') && !response.endsWith('?')) {
-            response += '.';
+        const lowerMessage = message.toLowerCase();
+        const positiveCount = positiveWords.filter(word => lowerMessage.includes(word)).length;
+        const negativeCount = negativeWords.filter(word => lowerMessage.includes(word)).length;
+        
+        if (positiveCount > negativeCount) return 'positive';
+        if (negativeCount > positiveCount) return 'negative';
+        return 'neutral';
+    }
+
+    // Generate contextual response
+    generateContextualResponse(userMessage, retailer, context, sentiment) {
+        // Use conversation history to generate more intelligent responses
+        const recentTopics = this.getRecentTopics();
+        
+        if (sentiment === 'negative') {
+            const empatheticResponses = [
+                `I understand your concern and I want to help resolve this for you. Can you provide more details about what you're experiencing?`,
+                `I'm sorry to hear about this issue. Let me work with you to find a solution that addresses your needs.`,
+                `I appreciate you bringing this to my attention. I'm committed to helping you resolve this matter.`
+            ];
+            return empatheticResponses[Math.floor(Math.random() * empatheticResponses.length)];
         }
         
-        return response.trim();
+        if (sentiment === 'positive') {
+            const positiveResponses = [
+                `I'm glad to hear that! I'm here to help you with whatever you need. What can I assist you with today?`,
+                `That's wonderful! I'm happy to help you further. Is there anything else I can do for you?`,
+                `Great! I'm here to provide you with the best possible service. What would you like to know?`
+            ];
+            return positiveResponses[Math.floor(Math.random() * positiveResponses.length)];
+        }
+        
+        // Neutral default responses with context awareness
+        const contextualResponses = [
+            `I understand your request. Let me help you with that. Could you provide a bit more detail so I can assist you better?`,
+            `I want to make sure I understand your needs correctly. Can you tell me more about what you're looking for?`,
+            `I'm here to help you resolve this. What additional information can you share so I can provide the best assistance?`,
+            `I appreciate you reaching out. Let me see how I can help you with this matter.`,
+            `I understand this is important to you. Let me work on finding the best solution for your situation.`
+        ];
+        
+        return contextualResponses[Math.floor(Math.random() * contextualResponses.length)];
+    }
+
+    // Get recent conversation topics
+    getRecentTopics() {
+        const userMessages = this.conversationHistory
+            .filter(msg => msg.role === 'user')
+            .map(msg => msg.content)
+            .slice(-3);
+        return userMessages;
     }
 
     // Fallback response system
@@ -245,10 +494,29 @@ Current conversation context: ${this.conversationHistory.length > 0 ? 'Ongoing c
     // Test API connection
     async testConnection() {
         try {
-            const testResponse = await this.generateResponse('Hello, this is a test message.');
-            return { success: true, response: testResponse };
+            // Wait for Puter.js to be ready
+            await this.waitForPuter();
+            
+            // Test Puter.js directly
+            console.log('Testing Puter.js connection...');
+            const selectedModel = this.getSelectedModel();
+            console.log('Testing with model:', selectedModel);
+            const testResponse = await puter.ai.chat('Hello, this is a test message.', { 
+                model: selectedModel,
+                max_tokens: selectedModel === 'o1' ? 100 : 50
+            });
+
+            console.log('Test response:', testResponse);
+            if (testResponse && testResponse.message && testResponse.message.content) {
+                console.log('Test successful, content:', testResponse.message.content);
+                return { success: true, response: testResponse.message.content };
+            } else {
+                console.log('No valid response structure');
+                return { success: false, error: 'No response from Puter.js' };
+            }
         } catch (error) {
-            return { success: false, error: error.message };
+            console.error('Test connection error:', error);
+            return { success: false, error: error.message || error };
         }
     }
 
