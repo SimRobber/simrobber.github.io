@@ -658,8 +658,8 @@ class UIManager {
     }
 
     async handleAddRefund() {
-        const deliveredDate = document.getElementById('refund-delivered-date').value;
-        const returnDays = parseInt(document.getElementById('refund-return-days').value);
+        const deliveredDate = document.getElementById('refund-delivered-date').value || null;
+        const returnDays = document.getElementById('refund-return-days').value ? parseInt(document.getElementById('refund-return-days').value) : null;
         const returnDeadline = this.calculateReturnDeadline(deliveredDate, returnDays);
         
         const refundData = {
@@ -1001,8 +1001,8 @@ class UIManager {
 
     async handleEditRefund() {
         const refundId = document.getElementById('edit-refund-id').value;
-        const deliveredDate = document.getElementById('edit-refund-delivered-date').value;
-        const returnDays = parseInt(document.getElementById('edit-refund-return-days').value);
+        const deliveredDate = document.getElementById('edit-refund-delivered-date').value || null;
+        const returnDays = document.getElementById('edit-refund-return-days').value ? parseInt(document.getElementById('edit-refund-return-days').value) : null;
         const returnDeadline = this.calculateReturnDeadline(deliveredDate, returnDays);
         
         const updates = {
